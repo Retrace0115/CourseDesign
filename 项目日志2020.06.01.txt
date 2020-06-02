@@ -1,0 +1,94 @@
+2020.06.01
+完成了登录界面的编写，但由于电脑数据库异常导致一直卡壳。
+Login.html
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <div class="loginPanel">
+            <div class="top"></div>
+            <div class="bottom"><br/><br/>
+                <form action="../jsp文件/ValidateLogon.jsp" name="form" method="post" onSubmit="return validate();"><!--登录表单-->
+                    <span>
+                        <img src="../images/user.jpg" alt="账号：" width="30" height="30"/> 
+                        <input type="text" name="username" placeholder="" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        <img src="../images/pswd.jpg" alt="密码：" width="30" height="30"/> 
+                        <input type="password" name="pswd" placeholder="" class="user" size="20"/>
+                    </span><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="登录" class="loginButton"/>
+                    </span>
+                </form>
+                <a href="Register.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">注册账号</a>
+                <a href="Forget.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">找回密码</a>
+            </div>
+        </div>
+    </body>
+</html>
+
+BeforeChat.css
+body{
+    background-image: url(../images/loginBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+.loginPanel{
+    border: 0;
+    position: absolute;
+    left:33%;
+    top:100px;
+    width: 531px;
+    height: 410px;
+    box-shadow: 4px 4px 10px 2px gray;
+}
+.top{
+    width: 531px;
+    height: 150px;
+    background-image: url(../images/login.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-color: white;
+}
+.bottom{
+    width: 531px;
+    height: 260px;
+    text-align: center;
+    background-color: white;
+}
+.user{
+    border: 0;
+    border-bottom: 1px solid black;
+    outline:blue;
+    font-size: 20px;
+    font-family: "幼圆";
+}
+.loginButton{
+    width: 200px;
+    height: 30px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 3px;
+    background-color: aqua;
+}
+
+BeforeChat.js
+//检测是否填写了账号与密码
+function validate(){
+    
+    var fr=document.form;
+    if(fr.username.value===""||fr.pswd.value===""){
+	alert("用户名或密码不能为空！");
+        return false;
+    }
+    else{
+        return true;
+    }
+}
