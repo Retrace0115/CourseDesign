@@ -1,0 +1,11 @@
+2020.06.02
+create database CourseDesign;
+use CourseDesign;
+create table "APP".ID_PSWD
+(
+    ID VARCHAR(18) not null,
+    PSWD VARCHAR(16) not null unique,
+    NUMBER CHAR(11) not null unique,
+    primary key (ID)
+);
+INSERT INTO APP.ID_PSWD (ID, PSWD, "NUMBER", USERNAME) VALUES ('1903268687', '1805050115', '13212695663', '温吞烈酒，细漫长喉');
