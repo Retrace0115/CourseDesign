@@ -1,0 +1,299 @@
+2020.06.03
+   今天完成了聊主程序的一部分，
+新增ChatApp.jsp代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.util.Random"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+        <script type="text/javascript">
+            var time;
+            window.onload = function unit(){//初始化页面
+                //获取个人信息
+                <%
+                    String userID=(String)session.getAttribute("userID");
+                    ConnectDataBase db=new ConnectDataBase();//连接数据库
+                    String avatar="";
+                    String name="";
+                    String signature="";
+                    String birthday="";
+                    String userName="";
+                    boolean state=false;
+                    db.connect();
+                    ResultSet rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+userID+"'");
+                    try{
+                        if(rs.next()){
+                            avatar=rs.getString("AVATAR");
+                            name=rs.getString("NAME");
+                            signature=rs.getString("SIGNATURE");
+                            birthday=rs.getString("BIRTHDAY");
+                            userName=rs.getString("USERNAME");
+                            state=rs.getBoolean("STATE");
+                        }
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    db.closeDB();
+                %>
+                var avatar="<%=avatar%>",signature="<%=signature%>",name="<%=name%>",birthday="<%=birthday%>",userName="<%=userName%>";
+                var State="<%=state%>";
+                var userID="<%=(String)session.getAttribute("userID")%>";
+                var avatarNode=document.getElementById("myAvatar");
+                avatarNode.setAttribute("src","../images/"+avatar);
+                if(userName.length>9){
+                    document.getElementById("myUserName").innerHTML=userName.substring(0,9)+"..";
+                }
+                else{
+                    document.getElementById("myUserName").innerHTML=userName;
+                }
+                if(signature.length>11){
+                    document.getElementById("mySignature").innerHTML=signature.substring(0,11)+"...";
+                }
+                else{
+                    document.getElementById("mySignature").innerHTML=signature;
+                }
+                var Information=document.getElementById("Information");
+                
+                avatarNode.onmouseover=function(){
+                    clearTimeout(time);
+                    Information.style.display="inline-block";
+                };
+                avatarNode.onmouseout=function(){
+                    time=setTimeout("Information.style.display='none';person.save.setAttribute('class','save');person.edit.setAttribute('class','edit');",300);
+                };
+                Information.onmouseover=function(){
+                    clearTimeout(time);
+                    Information.style.display="inline-block";
+                };
+                Information.onmouseout=function(){
+                    time=setTimeout("Information.style.display='none';person.save.setAttribute('class','save');person.edit.setAttribute('class','edit');",300);
+                };
+                var person=document.person;
+                if(userName.length>10){
+                    person.uName.value=userName.substring(0,10)+"...";
+                }
+                else{
+                    person.uName.value=userName;
+                }
+                if(signature.length>10){
+                    person.sign.value=signature.substring(0,10)+"...";
+                }
+                else{
+                    person.sign.value=signature;
+                }
+                person.ID.value=userID;
+                person.Name.value=name;
+                person.birth.value=birthday;
+                if(State==="true"){
+                    person.state.value="在线";
+                }
+                else{
+                    person.state.value="离线";
+                }
+                
+                person.save.setAttribute("class","save");
+                person.edit.setAttribute("class","edit");
+            };
+            function clickFound(){
+                document.getElementById("inputFound").style.background="rgba(255,255,255,0.8)";
+                document.getElementById("inputFound").focus();
+                
+            }
+            function loseFound(){
+                document.getElementById("inputFound").style.background="rgba(255,255,255,0.5)";
+            }
+        </script>
+    </head>
+    <body>
+        <div id="Information">
+            <form action="SavePersonalInformation.jsp" method="post" name="person"><!--修改个人信息表单-->
+                <p>&nbsp;&nbsp;您的&nbsp;ID&nbsp;：<input type="text" disabled name="ID" class="look"/></p>
+                <p>&nbsp;&nbsp;您的昵称：<input type="text" readonly name="uName" class="look"/></p>
+                <p>&nbsp;&nbsp;个性签名：<input type="text" readonly name="sign" class="look"/></p>
+                <p>&nbsp;&nbsp;您的姓名：<input type="text" readonly name="Name" class="look"/></p>
+                <p>&nbsp;&nbsp;您的生日：<input type="text" readonly name="birth" class="look"/></p>
+                <p>&nbsp;&nbsp;当前状态：<input type="text" readonly name="state" class="look"/></p>
+            </form>
+        </div>
+        <div class="ChatMainPanel">
+            <div class="left">
+                <div class="leftTop"><!--顶部展示个人头像昵称和签名信息-->
+                    <img id="myAvatar" alt="头像" />
+                    <p id="myUserName"></p>
+                    <p id="mySignature"></p>
+                    <p class="found"><!--搜索框-->
+                        <input id="inputFound" class="inputFound" onfocus="clickFound()" onblur="loseFound()" type="text"/>
+                        <button id="buttonFound" onfocus="clickFound()" onblur="loseFound()" class="buttonFound">搜索</button>
+                    </p>
+                </div>
+                <div class="leftCenter"><!--联系人消息选项卡-->
+                    
+                </div>
+                <div class="leftBottom"><!--底部放置设置折叠菜单-->
+                    
+                </div>
+            </div>
+            <div class="right"></div> 
+        </div>
+       
+    </body>
+</html>
+
+新增ChatPageStyle.css代码：
+body{
+    background-image: url(../images/ChatBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    font-family: "幼圆";
+    background-color: black;
+}
+.ChatMainPanel{/*聊天主面板样式设置*/
+    border: 0;
+    width: 900px;
+    height: 600px;
+    position: absolute;
+    left:20%;
+    top: 60px;
+    background-color: white;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    font-family: "幼圆";
+}
+.left{/*左侧面板样式设置*/
+    float: left;
+    border: 0;
+    width: 30%;
+    height: 100%;
+    background-color: #333333;
+    border-bottom-left-radius: 10px;
+    border-top-left-radius: 10px;
+    color: white;
+    font-family: "幼圆";
+}
+.leftTop{/*左侧面板顶部样式设置*/
+    border-top-left-radius: 10px;
+    width: 100%;
+    height: 15%;
+    box-shadow: 0px 1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.leftCenter{/*左侧面板中间样式设置*/
+    width: 100%;
+    height: 80%;
+    overflow: auto;
+    font-family: "幼圆";
+}
+.leftBottom{/*左侧面板底部样式设置*/
+    border-bottom-left-radius: 10px;
+    width: 100%;
+    height: 5%;
+    box-shadow: 0px -1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.right{/*右侧面板样式设置*/
+    float: right;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+}
+
+#myUserName{/*设置昵称样式*/
+    position: absolute;
+    margin-left:70px;
+    margin-top:10px;
+    width: 200px;
+    height:30px; 
+    font-size: 20px;
+    font-family: "幼圆";
+    cursor: default;
+}
+#myAvatar{/*设置头像样式*/
+    position: absolute;
+    margin-left:10px;
+    margin-top:10px;
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    font-family: "幼圆";
+    cursor: pointer;
+}
+#myAvatar:hover{/*设置鼠标移动到头像上方时头像的样式*/
+    box-shadow: 0px 0px 5px 1px gray;
+}
+#mySignature{/*设置签名样式*/
+    position: absolute;
+    margin-left:70px;
+    margin-top:40px;
+    float: right;
+    height:20px; 
+    width: 200px;
+    font-family: "幼圆";
+    cursor: default;
+}
+.found{/*设置搜索框样式*/
+    position: absolute;
+    margin-left:0;
+    margin-top:60px;
+    width: 270px;
+    height:30px; 
+    font-family: "幼圆";
+}
+.inputFound{/*设置搜索框样式*/
+    position: absolute;
+    margin-top: 1%;
+    margin-left:0;
+    height: 86%;
+    width:75%;
+    border: 0;
+    border-right: 1px solid gray;
+    background: rgba(255,255,255,0.5);
+    outline: none;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.buttonFound{/*设置搜索按钮样式*/
+    position: absolute;
+    margin-top: 1%;
+    margin-left:206px;
+    width: 24%;
+    height: 91%;
+    border: 0;
+    border-left: 1px solid gray;
+    background: rgba(255,255,255,0.5);
+    outline: none;
+    cursor: pointer;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+.buttonFound:hover{/*设置鼠标移动到搜索按钮上方时搜索按钮的样式*/
+    background: rgba(255,255,255,0.8);
+}
+#Information{/*个人信息盒子样式设置*/
+    display: none;
+    position: absolute;
+    width: 18%;
+    height: 250px;
+    box-shadow: 4px 4px 10px 2px gray;
+    top:60px;
+    left: 15px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.8);
+}
+
+.look{/*设置修改个人信息表单的input框的样式*/
+    outline: none;
+    border:0;
+    background: rgba(255,255,255,0);
+    font-family: '幼圆';
+}
+
+程序的js代码采用内嵌式，主要是有些功能不太好写成外部引用
