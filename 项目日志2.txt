@@ -1,0 +1,506 @@
+2020.06.02
+    由于一直连接不上MySQL数据库所以就用了NetBeans自带的Java DB数据库。
+    然后Login.html页面有所改动
+Login.html页面代码：
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <div class="loginPanel">
+            <div class="top"></div>
+            <div class="bottom"><br/><br/>
+                <form action="../jsp文件/ValidateLogon.jsp" name="loginForm" method="post" onSubmit="return validateLogin();"><!--登录表单-->
+                    <span>
+                        <img src="../images/user.jpg" alt="账号：" width="30" height="30"/> 
+                        <input type="text" name="username" placeholder="ID" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        <img src="../images/pswd.jpg" alt="密码：" width="30" height="30"/> 
+                        <input type="password" name="pswd" placeholder="密码" class="user" size="20"/>
+                    </span><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="登录" class="loginButton"/>
+                    </span>
+                </form>
+                <a href="Register.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">注册账号</a>
+                <a href="Forget.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">找回密码</a>
+            </div>
+        </div>
+    </body>
+</html>
+
+Register.html页面代码：
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <div class="RegisterPanel"><!--注册面板-->
+            <div class="left">
+                
+            </div>
+            <div class="right"><br/><br/><br/><br/><br/><br/><br/>
+                <form action="../jsp文件/ValidateRegister.jsp" name="registerForm" method="post" onSubmit="return validateRegister();"><!--注册表单-->
+                    <span>
+                        您的昵称：<input type="text" name="registerName" class="newUser" placeholder="1-12个字符，不含空格！" />
+                    </span><br/><br/>
+                    <span>
+                        您的密码：<input type="password" name="registerPswd" class="newUser" placeholder="6-16个字符，不含空格！"/>
+                    </span><br/><br/>
+                    <span>
+                        手机号码：<input type="text" name="registerNumber" class="newUser" placeholder="可凭该号码找回密码"/>
+                    </span><br/><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="注册" class="registerButton"/>
+                    </span>
+                </form>
+                <a href="Login.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">已有账号？</a>
+            </div>
+        </div>
+    </body>
+</html>
+
+Forget.html页面代码：
+<!DOCTYPE html>=
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <!--生成验证码-->
+        <script>
+            var num="";
+            window.onload=function unit(){
+                for(var i=0;i<6;i++){
+                    num+=Math.floor(Math.random()*10).toString();
+                }
+                var vn=document.getElementById("vn");
+                vn.setAttribute("placeholder","请填写验证码："+num);
+            };
+            function validateForget(){
+                var fr=document.forgetForm;
+                var id=fr.id.value;
+                var number=fr.number.value;
+                var validateNumber=fr.validateNumber.value;
+                if(id===""){
+                    alert("请填写ID号码！");
+                    return false;
+                }
+                if(foundSpace(id)===0||id.length!==10){
+                    alert("请填写正确的ID号码！");
+                    return false;
+                }
+                if(number===""){
+                    alert("请填写手机号码！");
+                    return false;
+                }
+                if(foundSpace(number)===0||number.length!==11||number[0]!=="1"||(number[1]!=="3"&&number[1]!=="5"&&number[1]!=="7"&&number[1]!=="8")){
+                    alert("请填写正确的手机号码！");
+                    return false;
+                }
+                if(validateNumber===""){
+                    alert("请填写验证码！");
+                    return false;
+                }
+                if(validateNumber!==num){
+                    alert("验证码错误！");
+                    return false;
+                }
+                return true;
+            }
+            /*
+            * 检测字符串是否含有空格
+            * 有空格返回0
+            * 无空格返回1
+            */
+            function foundSpace(str){
+                var flag=1;
+                for(var i=0;i<str.length;i++){
+                    if(str[i]===" "){
+                        flag=0;
+                        return flag;
+                    }
+                }
+            }
+        </script>
+        <div class="ForgetPanel">
+            <div class="ForgetTop"></div>
+            <div class="ForgetBottom"><br/><br/>
+                <form action="../jsp文件/FoundPassword.jsp" name="forgetForm" method="post" onSubmit="return validateForget();"><!--找回密码表单-->
+                    <span>
+                        I&nbsp;D&nbsp;号码：<input type="text" name="id" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        手机号码：<input type="text" name="number" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        验&nbsp;证&nbsp;码：<input type="text" id="vn" name="validateNumber" class="user" size="20" />
+                    </span><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="提交" class="forgetButton"/>
+                    </span>
+                </form>
+                <a href="Register.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">注册账号</a>
+                <a href="Login.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">返回登录</a>
+            </div>
+        </div>
+    </body>
+</html>
+
+ValidateLogin.jsp页面代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            String username1=request.getParameter("username");
+            String password1=request.getParameter("pswd");
+            ConnectDataBase db = new ConnectDataBase();
+            db.connect();
+            ResultSet rs = db.executeQuery("select * from APP.ID_PSWD where ID='"+username1+"'");
+            try{
+                while(rs.next()){
+                    String password2=rs.getString("PSWD");
+                    db.closeDB();
+                    if(password1.equals(password2)){
+                        //跳转到主页面
+                        session.setAttribute("username",username1);
+                        out.println("<script  language='JavaScript'>window.location.href='ChatApp.jsp';</script>");
+                    }
+                    else{
+                        out.println("<script  language='JavaScript'>alert('密码错误！');window.location.href='../html文件/Login.html';</script>");
+                    }
+                }
+                db.closeDB();
+                out.println("<script  language='JavaScript'>alert('该用户不存在！');window.location.href='../html文件/Login.html';</script>");
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        %>
+    </body>
+</html>
+
+ValidateRegister.jsp页面代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.util.Random"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            //获取注册表单数据
+            String userName=request.getParameter("registerName");
+            String pswd=request.getParameter("registerPswd");
+            String number=request.getParameter("registerNumber");
+            ConnectDataBase db=new ConnectDataBase();//连接数据库
+            db.connect();
+            //分配ID
+            String ID="";
+            Random rand = new Random();
+            rand.nextInt(9);
+            while(true){
+                for(int i=0;i<10;i++){
+                    int num = 0;
+                    if(i==0){
+                        num=rand.nextInt(9)+1;
+                    }
+                    else{
+                        num=rand.nextInt(10);
+                    }
+                    ID+=String.valueOf(num);
+                }
+                ResultSet rs=db.executeQuery("select * from APP.ID_PSWD where ID='"+ID+"'");
+                if(rs.next()){
+                    continue;
+                }
+                else{
+                    break;
+                }
+            }
+            db.executeUpdate("INSERT INTO APP.ID_PSWD (ID, PSWD, NUMBER, USERNAME) VALUES ('"+ID+"', '"+pswd+"', '"+number+"', '"+userName+"')");
+            db.closeDB();
+        %>
+    </body>
+</html>
+
+FoundPassword.jsp页面代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            //获取找回密码表单数据
+            String ID=request.getParameter("id");
+            String number=request.getParameter("number");
+            ConnectDataBase db=new ConnectDataBase();//连接数据库
+            db.connect();
+            //查找ID并比对手机号码
+            ResultSet rs=db.executeQuery("select * from APP.ID_PSWD where ID='"+ID+"' and NUMBER='"+number+"'");
+            try{
+                if(rs.next()){//找到了
+                    String pswd=rs.getString("PSWD");
+                    db.closeDB();
+                    %>
+                        <div class="FoundPassword found">
+                            <p style="color: white;margin:150px 110px; ">您的密码为：<%=pswd%></p>
+                            <a href="../html文件/Forget.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">修改密码</a>
+                            <a href="../html文件/Login.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">立即登录</a>
+                        </div>
+                    <%
+                }
+                else{//没找到
+                    db.closeDB();
+                    %>
+                        <div class="FoundPassword notFound">
+                            <a href="../html文件/Forget.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">重新查找</a>
+                            <a href="../html文件/Login.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">想起密码</a>
+                        </div>
+                        
+                    <%
+                }
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        %>
+    </body>
+</html>
+
+BeforeChat.js文件有所改动，代码：
+//检测是否填写了账号与密码
+function validateLogin(){
+    var fr=document.loginForm;
+    if(fr.username.value===""||fr.pswd.value===""){
+	alert("用户名或密码不能为空！");
+        return false;
+    }
+    else if(foundSpace(fr.username.value)===0){
+        alert("用户名不正确！");
+        return false;
+    }
+    else if(foundSpace(fr.pswd.value)===0){
+        alert("密码错误！");
+        return false;
+    }
+    else{
+        return true;
+    }
+}
+
+//检测注册信息是否合法
+function validateRegister(){
+    var fr=document.registerForm;
+    var un=fr.registerName.value;
+    var ps=fr.registerPswd.value;
+    var nb=fr.registerNumber.value;
+    if(un.length<1||un.length>12||foundSpace(un)===0){
+        alert("您的昵称不合法！");
+        return false;
+    }
+    if(ps.length<6||ps.length>16||foundSpace(ps)===0){
+        alert("您的密码不合法！");
+        return false;
+    }
+    if(nb.length!==11||nb[0]!=="1"||(nb[1]!=="3"&&nb[1]!=="5"&&nb[1]!=="7"&&nb[1]!=="8")||foundSpace(nb)===0){
+        alert("电话号码不合法！");
+        return false;
+    }
+    return true;
+}
+/*
+ * 检测字符串是否含有空格
+ * 有空格返回0
+ * 无空格返回1
+ */
+function foundSpace(str){
+    var flag=1;
+    for(var i=0;i<str.length;i++){
+        if(str[i]===" "){
+            flag=0;
+            return flag;
+        }
+    }
+}
+
+BeforeChat.css文件添加了几个样式,代码：
+body{/*设置登陆之前大的背景*/
+    background-image: url(../images/loginBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    font-family: "幼圆";
+    
+}
+.loginPanel{/*登录面板*/
+    border: 0;
+    position: absolute;
+    left:33%;
+    top:100px;
+    width: 531px;
+    height: 410px;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+}
+.top{/*登录面板上方GIF图部分*/
+    width: 531px;
+    height: 150px;
+    background-image: url(../images/login.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-color: white;
+}
+.bottom{/*登录面板下方组件部分布局*/
+    width: 531px;
+    height: 260px;
+    text-align: center;
+    background-color: white;
+}
+.user{/*设置用户输入框和和密码输入框样式*/
+    border: 0;
+    border-bottom: 1px solid black;
+    outline:blue;
+    font-size: 20px;
+    font-family: "幼圆";
+}
+.loginButton{/*设置登录按钮样式*/
+    width: 200px;
+    height: 30px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 3px;
+    background-color: aqua;
+    outline: none;
+    font-family: "幼圆";
+}
+
+.RegisterPanel{/*设置注册面板样式*/
+    position: absolute;
+    left:20%;
+    top:120px;
+    width: 800px;
+    height: 450px;
+    background-color: white;
+    box-shadow: 4px 4px 10px 2px gray;
+}
+.left{
+    float: left;
+    width: 60%;
+    height: 100%;
+    background-image: url(../images/registerBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+.right{
+    float: right;
+    width: 40%;
+    height: 100%;
+    background-color: white;
+    text-align: center;
+}
+.newUser{/*设置输入框组件样式*/
+    border: 0;
+    outline:blue;
+    border-bottom: 1px solid black;
+    font-family: "幼圆";
+}
+.registerButton{/*设置注册按钮样式*/
+    width: 200px;
+    height: 30px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 3px;
+    background-color: lightgreen;
+    outline: none;
+    font-family: "幼圆";
+}
+.ForgetPanel{/*设置找回密码面板样式*/
+    border: 0;
+    position: absolute;
+    left:33%;
+    top:100px;
+    width: 531px;
+    height: 410px;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+}
+.ForgetTop{/*设置找回密码面板顶部面板样式*/
+    width: 531px;
+    height: 40%;
+    background-image: url(../images/forgetTopBGI.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+.ForgetBottom{/*设置找回密码面板底部面板样式*/
+    text-align: center;
+}
+.forgetButton{/*设置提交按钮样式*/
+    width: 200px;
+    height: 30px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 3px;
+    background-color: lightsalmon;
+    outline: none;
+    font-family: "幼圆";
+}
+.FoundPassword{/*FoundPasseord.jsp页面样式设置*/
+    border: 0;
+    position: absolute;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+}
+.found{/*找到了样式设置*/
+    left:37%;
+    top:200px;
+    width: 400px;
+    height: 300px;
+    background-image: url(../images/found.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+.notFound{/*未找到样式设置*/
+    left:35%;
+    top:140px;
+    width:500px;
+    height: 450px;
+    background-image: url(../images/notFound.gif);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
