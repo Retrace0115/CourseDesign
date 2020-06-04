@@ -1,0 +1,352 @@
+2020.06.04
+    今天把ChatApp主页面的leftbottom写的差不多了
+ChatApp.jsp代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.util.Random"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+        <script type="text/javascript">
+            var time1,time2,time3,time4;
+            window.onload = function unit(){//初始化页面
+                //防止直接进入主程序
+                var testing="<%=(String)session.getAttribute("userID")%>";
+                if(testing==="null"){
+                    window.location.href="../html文件/Login.html";
+                }
+                //获取个人信息
+                <%
+                    String userID=(String)session.getAttribute("userID");
+                    ConnectDataBase db=new ConnectDataBase();//连接数据库
+                    String avatar="";
+                    String name="";
+                    String signature="";
+                    String birthday="";
+                    String userName="";
+                    boolean state=false;
+                    db.connect();
+                    ResultSet rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+userID+"'");
+                    try{
+                        if(rs.next()){
+                            avatar=rs.getString("AVATAR");
+                            name=rs.getString("NAME");
+                            signature=rs.getString("SIGNATURE");
+                            birthday=rs.getString("BIRTHDAY");
+                            userName=rs.getString("USERNAME");
+                            state=rs.getBoolean("STATE");
+                        }
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    db.closeDB();
+                %>
+                var avatar="<%=avatar%>",signature="<%=signature%>",name="<%=name%>",birthday="<%=birthday%>",userName="<%=userName%>";
+                var State="<%=state%>";
+                var userID="<%=(String)session.getAttribute("userID")%>";
+                var avatarNode=document.getElementById("myAvatar");
+                avatarNode.setAttribute("src","../images/"+avatar);
+                if(userName.length>9){
+                    document.getElementById("myUserName").innerHTML=userName.substring(0,9)+"..";
+                }
+                else{
+                    document.getElementById("myUserName").innerHTML=userName;
+                }
+                if(signature.length>11){
+                    document.getElementById("mySignature").innerHTML=signature.substring(0,11)+"...";
+                }
+                else{
+                    document.getElementById("mySignature").innerHTML=signature;
+                }
+                var Information=document.getElementById("Information");
+                
+                avatarNode.onmouseover=function(){//鼠标从头像上移开后
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                avatarNode.onmouseout=function(){//鼠标移动到头像上时
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                Information.onmouseover=function(){//鼠标移动到个人信息上时
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                Information.onmouseout=function(){//鼠标从个人信息上移开后
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                var person=document.person;
+                if(userName.length>10){
+                    person.uName.value=userName.substring(0,10)+"...";
+                }
+                else{
+                    person.uName.value=userName;
+                }
+                if(signature.length>10){
+                    person.sign.value=signature.substring(0,10)+"...";
+                }
+                else{
+                    person.sign.value=signature;
+                }
+                person.ID.value=userID;
+                person.Name.value=name;
+                person.birth.value=birthday;
+                if(State==="true"){
+                    person.state.value="在线";
+                }
+                else{
+                    person.state.value="离线";
+                }
+                var fatherMenu=document.getElementById("fahterMenu");
+                var sonMenu=document.getElementById("sonMenu");
+                var stateButton=document.getElementById("stateButton");
+                var StateMenu=document.getElementById("StateMenu");
+                fatherMenu.onmouseover=function(){//鼠标移动到折叠菜单按钮上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    sonMenu.style.display="inline-block";
+                    StateMenu.style.display="none";
+                };
+                fatherMenu.onmouseout=function(){//鼠标从折叠菜单按钮上移开时
+                    time2=setTimeout("sonMenu.style.display='none';",300);
+                };
+                sonMenu.onmouseover=function(){//鼠标移动到折叠菜单子菜单上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    sonMenu.style.display="inline-block";
+                };
+                sonMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time2=setTimeout("sonMenu.style.display='none';StateMenu.style.display='none';",300);
+                };
+                stateButton.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    StateMenu.style.display="inline-block";
+                };
+                stateButton.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                };
+                StateMenu.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    StateMenu.style.display="inline-block";
+                    sonMenu.style.display="inline-block";
+                };
+                StateMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                    time4=setTimeout("sonMenu.style.display='none';",300);
+                };
+            };
+        </script>
+    </head>
+    <body>
+        <div id="Information">
+            <form action="SavePersonalInformation.jsp" method="post" name="person"><!--修改个人信息表单-->
+                <p>&nbsp;&nbsp;您的&nbsp;ID&nbsp;：<input type="text" disabled name="ID" class="look"/></p>
+                <p>&nbsp;&nbsp;您的昵称：<input type="text" readonly name="uName" class="look"/></p>
+                <p>&nbsp;&nbsp;个性签名：<input type="text" readonly name="sign" class="look"/></p>
+                <p>&nbsp;&nbsp;您的姓名：<input type="text" readonly name="Name" class="look"/></p>
+                <p>&nbsp;&nbsp;您的生日：<input type="text" readonly name="birth" class="look"/></p>
+                <p>&nbsp;&nbsp;当前状态：<input type="text" readonly name="state" class="look"/></p>
+            </form>
+        </div>
+        <div class="ChatMainPanel">
+            <div class="left">
+                <div class="leftTop"><!--顶部展示个人头像昵称和签名信息-->
+                    <img id="myAvatar" alt="头像" />
+                    <p id="myUserName"></p>
+                    <p id="mySignature"></p>
+                    <p class="found"><!--搜索框-->
+                        <input id="inputFound" class="inputFound" onfocus="clickFound()" onblur="loseFound()" type="text"/>
+                        <button id="buttonFound" onfocus="clickFound()" onblur="loseFound()" class="buttonFound">搜索</button>
+                    </p>
+                </div>
+                <div class="leftCenter"><!--联系人消息选项卡-->
+                    
+                </div>
+                <div class="leftBottom"><!--底部放置设置折叠菜单-->
+                    <input type="button" id="fahterMenu" class="fahterMenu" value="☰"/>
+                </div>
+                <div id="sonMenu"><!--隐藏的菜单-->
+                    <li onclick="editMyInformation()">编辑资料</li>
+                    <li onclick="changeUserName()">切换账号</li>
+                    <li id="stateButton">切换状态</li>
+                    <li onclick="Exit()">注销账号</li>
+                </div>
+                <div id="StateMenu">
+                    <li onclick="changeIsOnLine()">我在线上</li>
+                    <li onclick="changeIsOffLine()">离线</li>
+                </div>
+            </div>
+            <div class="right"></div> 
+        </div>
+    </body>
+</html>
+ChatPageStyle.css代码有所改动
+新增代码：
+div .fahterMenu{/*设置折叠菜单按钮样式*/
+    background:rgba(255,255,255,0);
+    border: 0;
+    outline: none;
+    margin-left: 20px;
+    margin-top: 0px;
+    cursor: pointer;
+    color: white;
+    height: 30px;
+    border-radius: 3px;
+}
+.fahterMenu:hover{/*设置鼠标移动到折叠菜单按钮上时的样式*/
+    background:rgba(255,255,255,0.2);
+}
+#sonMenu{/*设置折叠菜单子菜单样式*/
+    display: none;
+    background: rgba(255,255,255,0.9);
+    position: absolute;
+    bottom: 31px;
+    left:20px;
+    border: 0;
+    box-shadow: 0px 0px 7px 1px gray;
+    color: black;
+    border-radius: 5px;
+    width:20%;
+    height: 160px;
+    text-align: center;
+}
+#sonMenu li{/*设置折叠菜单子菜单菜单项样式*/
+    height: 25%;
+    border: 0;
+    border-radius: 5px;
+    list-style: none;
+    cursor: pointer;
+    line-height: 40px;
+}
+#sonMenu li:hover{/*设置鼠标移动到折叠菜单子菜单菜单项上时的样式*/
+    background:rgba(255,255,255,1);
+}
+#StateMenu{/*设置折叠菜单三级子菜单的样式*/
+    display: none;
+    background: rgba(255,255,255,0.9);
+    position: absolute;
+    bottom: 51px;
+    left:205px;
+    border: 0;
+    box-shadow: 0px 0px 7px 1px gray;
+    color: black;
+    border-radius: 5px;
+    width:15%;
+    height: 80px;
+    text-align: center;
+}
+#StateMenu li{/*设置折叠菜单三级子菜单菜单项样式*/
+    height: 50%;
+    border: 0;
+    border-radius: 5px;
+    list-style: none;
+    cursor: pointer;
+    line-height: 40px;
+}
+#StateMenu li:hover{/*设置鼠标移动到折叠菜单三级子菜单菜单项上时的样式*/
+    background:rgba(255,255,255,1);
+}
+
+然后ChatPageMove.js新增了几个函数，主要用于跳转
+代码如下
+
+function clickFound(){//点击搜索按钮后聚焦到搜索框
+    document.getElementById("inputFound").style.background="rgba(255,255,255,0.8)";
+    document.getElementById("inputFound").focus();
+                
+}
+function loseFound(){//搜索按钮搜索框都失去焦点
+    document.getElementById("inputFound").style.background="rgba(255,255,255,0.5)";
+}
+
+function Exit(){//注销账户，销毁session并设置为离线状态
+    window.location.href="../jsp文件/Eixt.jsp";
+}
+function changeUserName(){//切换账号然后跳转到登录页面
+     window.location.href="../jsp文件/changeUserName.jsp";
+}
+
+function changeIsOnLine(){//切换到在线状态
+    window.location.href="../jsp文件/changeIsState.jsp?name=OnLine";
+}
+function changeIsOffLine(){//切换到离线状态
+    window.location.href="../jsp文件/changeIsState.jsp?name=OffLine";
+}
+function editMyInformation(){//编辑个人资料
+    window.location.href="../html文件/editMyInformation.html";
+}
+
+新增Exit.jsp代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.PERSONINFORMATION set STATE='false' where ID='"+(String)session.getAttribute("userID")+"'");
+            db.closeDB();
+            session.setAttribute("userID","null");
+            out.println("<script  language='JavaScript'>window.location.href='../html文件/Login.html';</script>");
+        %>
+        
+    </body>
+</html>
+
+新增changeUserName.jsp代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.PERSONINFORMATION set STATE='false' where ID='"+(String)session.getAttribute("userID")+"'");
+            db.closeDB();
+            out.println("<script  language='JavaScript'>window.location.href='../html文件/Login.html';</script>");
+        %>
+    </body>
+</html>
+
+新增changeIsState.jsp代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            String isState=request.getParameter("name");
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            if("OnLine".equals(isState)){
+                db.executeUpdate("update APP.PERSONINFORMATION set STATE='true' where ID='"+(String)session.getAttribute("userID")+"'");
+            }
+            else if("OffLine".equals(isState)){
+                db.executeUpdate("update APP.PERSONINFORMATION set STATE='false' where ID='"+(String)session.getAttribute("userID")+"'");
+            }
+            db.closeDB();
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
