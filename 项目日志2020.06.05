@@ -1,0 +1,595 @@
+2020.06.05
+    ChatApp.jsp文件有更改：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+        <script type="text/javascript">
+            var time1,time2,time3,time4;
+            window.onload = function unit(){//初始化页面
+                //防止直接进入主程序
+                var testing="<%=(String)session.getAttribute("userID")%>";
+                if(testing==="null"){
+                    window.location.href="../html文件/Login.html";
+                }
+                //获取个人信息
+                <%
+                    String userID=(String)session.getAttribute("userID");
+                    ConnectDataBase db=new ConnectDataBase();//连接数据库
+                    String avatar="";
+                    String name="";
+                    String signature="";
+                    String birthday="";
+                    String userName="";
+                    boolean state=false;
+                    db.connect();
+                    ResultSet rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+userID+"'");
+                    try{
+                        if(rs.next()){
+                            avatar=rs.getString("AVATAR");
+                            name=rs.getString("NAME");
+                            signature=rs.getString("SIGNATURE");
+                            birthday=rs.getString("BIRTHDAY");
+                            userName=rs.getString("USERNAME");
+                            state=rs.getBoolean("STATE");
+                        }
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    db.closeDB();
+                %>
+                var avatar="<%=avatar%>",signature="<%=signature%>",name="<%=name%>",birthday="<%=birthday%>",userName="<%=userName%>";
+                var State="<%=state%>";
+                var userID="<%=(String)session.getAttribute("userID")%>";
+                var avatarNode=document.getElementById("myAvatar");
+                avatarNode.setAttribute("src","../images/"+avatar);
+                if(userName.length>9){
+                    document.getElementById("myUserName").innerHTML=userName.substring(0,9)+"..";
+                }
+                else{
+                    document.getElementById("myUserName").innerHTML=userName;
+                }
+                if(signature.length>11){
+                    document.getElementById("mySignature").innerHTML=signature.substring(0,11)+"...";
+                }
+                else{
+                    document.getElementById("mySignature").innerHTML=signature;
+                }
+                var Information=document.getElementById("Information");
+                
+                avatarNode.onmouseover=function(){//鼠标从头像上移开后
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                avatarNode.onmouseout=function(){//鼠标移动到头像上时
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                Information.onmouseover=function(){//鼠标移动到个人信息上时
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                Information.onmouseout=function(){//鼠标从个人信息上移开后
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                var person=document.person;
+                if(userName.length>10){
+                    person.uName.value=userName.substring(0,10)+"...";
+                }
+                else{
+                    person.uName.value=userName;
+                }
+                if(signature.length>10){
+                    person.sign.value=signature.substring(0,10)+"...";
+                }
+                else{
+                    person.sign.value=signature;
+                }
+                person.ID.value=userID;
+                person.Name.value=name;
+                person.birth.value=birthday;
+                if(State==="true"){
+                    person.state.value="在线";
+                }
+                else{
+                    person.state.value="离线";
+                }
+                var fatherMenu=document.getElementById("fahterMenu");
+                var sonMenu=document.getElementById("sonMenu");
+                var stateButton=document.getElementById("stateButton");
+                var StateMenu=document.getElementById("StateMenu");
+                fatherMenu.onmouseover=function(){//鼠标移动到折叠菜单按钮上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    sonMenu.style.display="inline-block";
+                    StateMenu.style.display="none";
+                };
+                fatherMenu.onmouseout=function(){//鼠标从折叠菜单按钮上移开时
+                    time2=setTimeout("sonMenu.style.display='none';",300);
+                };
+                sonMenu.onmouseover=function(){//鼠标移动到折叠菜单子菜单上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    sonMenu.style.display="inline-block";
+                };
+                sonMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time2=setTimeout("sonMenu.style.display='none';StateMenu.style.display='none';",300);
+                };
+                stateButton.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    StateMenu.style.display="inline-block";
+                };
+                stateButton.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                };
+                StateMenu.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    StateMenu.style.display="inline-block";
+                    sonMenu.style.display="inline-block";
+                };
+                StateMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                    time4=setTimeout("sonMenu.style.display='none';",300);
+                };
+            };
+        </script>
+    </head>
+    <body>
+        <div id="Information">
+            <form action="SavePersonalInformation.jsp" method="post" name="person"><!--修改个人信息表单-->
+                <p>&nbsp;&nbsp;您的&nbsp;ID&nbsp;：<input type="text" disabled name="ID" class="look"/></p>
+                <p>&nbsp;&nbsp;您的昵称：<input type="text" readonly name="uName" class="look"/></p>
+                <p>&nbsp;&nbsp;个性签名：<input type="text" readonly name="sign" class="look"/></p>
+                <p>&nbsp;&nbsp;您的姓名：<input type="text" readonly name="Name" class="look"/></p>
+                <p>&nbsp;&nbsp;您的生日：<input type="text" readonly name="birth" class="look"/></p>
+                <p>&nbsp;&nbsp;当前状态：<input type="text" readonly name="state" class="look"/></p>
+            </form>
+        </div>
+        <div class="ChatMainPanel">
+            <div class="left">
+                <div class="leftTop"><!--顶部展示个人头像昵称和签名信息-->
+                    <img id="myAvatar" alt="头像" />
+                    <p id="myUserName"></p>
+                    <p id="mySignature"></p>
+                    <p class="found"><!--搜索框-->
+                        <input id="inputFound" class="inputFound" onfocus="clickFound()" onblur="loseFound()" type="text"/>
+                        <button id="buttonFound" onfocus="clickFound()" onblur="loseFound()" class="buttonFound">搜索</button>
+                    </p>
+                </div>
+                <div class="leftCenter"><!--联系人消息选项卡-->
+                    
+                </div>
+                <div class="leftBottom"><!--底部放置设置折叠菜单-->
+                    <input type="button" id="fahterMenu" class="fahterMenu" value="☰"/>
+                </div>
+                <div id="sonMenu"><!--隐藏的菜单-->
+                    <li onclick="editMyInformation()">编辑资料</li>
+                    <li onclick="changePassWord()">修改密码</li>
+                    <li id="stateButton">切换状态</li>
+                    <li onclick="Exit()">注销账号</li>
+                </div>
+                <div id="StateMenu">
+                    <li onclick="changeIsOnLine()">我在线上</li>
+                    <li onclick="changeIsOffLine()">离线</li>
+                </div>
+            </div>
+            <div class="right"></div> 
+        </div>
+    </body>
+</html>
+下方折叠菜单已经做好
+ChatPageStyle.css文件新增样式代码：
+.editInform{/*设置修改信息面板样式*/
+    border: 0;
+    width: 360px;
+    height: 650px;
+    position: absolute;
+    left:37%;
+    top: 30px;
+    background-color: white;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    font-family: "幼圆";
+    background-image: url(../images/EditInformBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+#editForm{/*设置修改信息表单样式*/
+    position: absolute;
+    bottom: 0;
+    left:22%;
+    width: 80%;
+    height: 50%;
+}
+#avatar{/*设置预选头像的样式*/
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 1px gray;
+    margin-left: 20px;
+}
+.submitButton{/*设置提交按钮的样式*/
+    width: 200px;
+    height: 30px;
+    cursor: pointer; 
+    border: 0; 
+    border-radius: 5px;
+    background-color: lightskyblue;
+    outline: none;
+    font-family: '幼圆';
+}
+.submitButton:hover{/*设置鼠标移动到提交按钮上方时按钮的样式*/
+    background-color: cyan;
+}
+.selectAvatar{/*设置头像选择区的样式*/
+    width: 300px;
+    height: 303px;
+    overflow: auto;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    background-color: white;
+    position: absolute;
+    left:61%;
+    top:377px;
+}
+/*-------------------------设置滚动条的样式-------------------------*/
+.selectAvatar::-webkit-scrollbar {/*滚动条整体样式*/
+    width: 4px;     /*高宽分别对应横竖滚动条的尺寸*/
+    height: 300px;
+}
+.selectAvatar::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+    border-radius: 5px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.2);
+}
+.selectAvatar::-webkit-scrollbar-track {/*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    border-radius: 0;
+    background: rgba(0,0,0,0.1);
+}
+/*-----------------------------------------------------------------*/
+.imgStyle{/*设置头像选择区头像的样式*/
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 1px gray;
+    position: relative;
+    margin: 11px;
+}
+.imgStyle:hover{/*设置鼠标移动到头像选择区头像上方时的样式*/
+    box-shadow: 0px 0px 10px 2px gray;
+    transform: scale(1.3);
+}
+.changePassWord{/*设置修改密码面板的样式*/
+    width: 400px;
+    height: 400px;
+    position: absolute;
+    left:37%;
+    top: 160px;
+    background-image: url(../images/changePassWordBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+    border-radius: 10px;
+    font-family: "幼圆";
+    text-align: center;
+}
+
+ChatPageMove.js新增了一个函数：
+function validateInform(){//验证修改信息表单提交的数据
+    var form=document.editForm;
+    if(form.userName.value===""){
+        alert("昵称不可为空！");
+        return false;
+    }
+    if(form.userName.value.length>18){
+        alert("昵称不可多于18字！");
+        return false;
+    }
+    if(form.mySign.value.length>80){
+        alert("签名不可多于80字！");
+        return false;
+    }
+    if(form.myName.value.length>6){
+        alert("姓名不可多于6个字！");
+        return false;
+    }
+    if(form.myBirth.value.length!==10){
+        alert("生日格式错误！");
+        return false;
+    }
+    return true;
+}
+
+Exit.jsp文件代码改动：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.PERSONINFORMATION set STATE='false' where ID='"+(String)session.getAttribute("userID")+"'");
+            db.closeDB();
+            session.setAttribute("userID","null");
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
+
+新增changePassWord.jsp用于修改密码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+            var oldPswd="<%=(String)session.getAttribute("userPswd")%>";
+            window.onload = function unit(){//初始化页面
+                //防止直接进入主程序
+                var testing="<%=(String)session.getAttribute("userID")%>";
+                if(testing==="null"){
+                    window.location.href="../html文件/Login.html";
+                }
+            };
+            function validateChangePassWord(){
+                var form=document.changePasswordForm;
+                var p1=form.oldPswd.value;
+                var p2=form.newPswd1.value;
+                var p3=form.newPswd2.value;
+                if(p1===""){
+                    alert("请输入原密码！");
+                    return false;
+                }
+                if(p1!==oldPswd){
+                    alert("原密码不正确！");
+                    return false;
+                }
+                if(p2===""){
+                    alert("请输入新密码！");
+                    return false;
+                }
+                if(foundSpace(p2)===0){
+                    alert("密码中含有空格！");
+                    return false;
+                }
+                if(p3===""){
+                    alert("请确认新密码！");
+                    return false;
+                }
+                if(p2!==p3){
+                    alert("两次输入的密码不一致！");
+                    return false;
+                }
+                if(p1===p2){
+                    alert("密码未更改！");
+                    return false;
+                }
+                return true;
+            }
+            /*
+             * 检测字符串是否含有空格
+             * 有空格返回0
+             * 无空格返回1
+             */
+            function foundSpace(str){
+                var flag=1;
+                for(var i=0;i<str.length;i++){
+                    if(str[i]===" "){
+                        flag=0;
+                        return flag;
+                    }
+                }
+            }
+        </script>
+        <div class="changePassWord"><!--修改密码面板-->
+            <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+            <form action="saveChangePassWord.jsp" name="changePasswordForm" method="post" onSubmit="return validateChangePassWord();"><!--修改密码表单-->
+                <span>
+                    原&nbsp;密&nbsp;码：<input type="password" name="oldPswd" class="user" size="20" style="outline:none;"/>
+                </span><br/><br/>
+                <span>
+                    新&nbsp;密&nbsp;码：<input type="password" name="newPswd1" placeholder="6-16位，不含空格！" class="user" size="20" style="outline:none;"/>
+                </span><br/><br/><span>
+                    确认密码：<input type="password" name="newPswd2" placeholder="6-16位，不含空格！" class="user" size="20" style="outline:none;"/>
+                </span><br/><br/><br/>
+                <span>
+                    <input type="submit" value="保存修改" class="submitButton"/>
+                </span>
+            </form>
+            <a href="ChatApp.jsp" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">取消</a>
+        </div>
+    </body>
+</html>
+
+新增saveChangePassWord.jsp用于保存修改的密码
+代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            String userID=(String)session.getAttribute("userID");
+            String newPswd=request.getParameter("newPswd1");
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.ID_PSWD set PSWD='"+newPswd+"' where ID='"+userID+"'");
+            session.setAttribute("userPswd",newPswd);
+            db.closeDB();
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
+
+新增editMyInformation.jsp用于修改个人信息
+代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+        <script type="text/javascript">
+            window.onload = function unit(){
+                var testing="<%=(String)session.getAttribute("userID")%>";
+                if(testing==="null"){
+                    window.location.href="../html文件/Login.html";
+                }
+                //获取个人信息
+                <%
+                    String userID=(String)session.getAttribute("userID");
+                    ConnectDataBase db=new ConnectDataBase();//连接数据库
+                    String avatar="";
+                    String name="";
+                    String signature="";
+                    String birthday="";
+                    String userName="";
+                    db.connect();
+                    ResultSet rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+userID+"'");
+                    try{
+                        if(rs.next()){
+                            avatar=rs.getString("AVATAR");
+                            name=rs.getString("NAME");
+                            signature=rs.getString("SIGNATURE");
+                            birthday=rs.getString("BIRTHDAY");
+                            userName=rs.getString("USERNAME");
+                        }
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    db.closeDB();
+                %>
+                var avatar="<%=avatar%>",signature="<%=signature%>",name="<%=name%>",birthday="<%=birthday%>",userName="<%=userName%>";
+                var form=document.editForm;
+                var o_n_Avatar=document.getElementById("avatar");
+                o_n_Avatar.setAttribute("src","../images/"+avatar);
+                form.newAvatar.value=avatar;
+                form.userName.value=userName;
+                form.mySign.value=signature;
+                form.myName.value=name;
+                if(birthday[0]===" "){
+                    form.myBirth.value="";
+                }
+                else{
+                    form.myBirth.value=birthday;
+                }
+                var selectAvatar=document.getElementById("selectAvatar");
+                var imgUrl=new Array("DefaultAvatar.gif","1.jpg","2.gif","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg","9.jpg","10.jpg","11.gif","12.gif","13.jpg","14.jpg","15.jpg");
+                for(var i=0;i<imgUrl.length;i++){//添加图片到头像选择区
+                    var img=document.createElement("img");
+                    img.setAttribute("src","../images/"+imgUrl[i]);
+                    img.setAttribute("class","imgStyle");
+                    img.onclick=function(){
+                        var obj= window.event?event.srcElement:evt.target;
+                        o_n_Avatar.setAttribute("src",obj.src);
+                        form.newAvatar.value=obj.src.toString().substring(obj.src.toString().lastIndexOf("/")+1);
+                        selectAvatar.style.display="none";
+                        document.getElementById("addSelectAvatarButton").innerHTML="选择";
+                    };
+                    selectAvatar.append(img);
+                }
+            };
+            function addSelectAvatar(){
+                var selectAvatar=document.getElementById("selectAvatar");
+                if(selectAvatar.style.display==="none"){
+                    document.getElementById("addSelectAvatarButton").innerHTML="取消";
+                    document.getElementById("addSelectAvatarButton").style.color="gray";
+                    selectAvatar.style.display="inline-block";
+                }
+                else{
+                    document.getElementById("addSelectAvatarButton").innerHTML="选择";
+                    document.getElementById("addSelectAvatarButton").style.color="blue";
+                    selectAvatar.style.display="none";
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div class="editInform"><!--编辑个人信息面板-->
+            <form id="editForm" action="savePersonalInformation.jsp" method="post" name="editForm" onSubmit="return validateInform();"><!--编辑个人信息表单-->
+                <p>头像:<img id="avatar" src="" alt="头像"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="javascript:;" id="addSelectAvatarButton" onclick="addSelectAvatar()">选择</a></p>
+                <input type="text" name="newAvatar" style="display:none;"/>
+                <p>昵称：<input type="text" name="userName" style="font-family: '幼圆';outline: none;"/></p>
+                <p>签名：<input type="text" name="mySign" style="font-family: '幼圆';outline: none;"/></p>
+                <p>姓名：<input type="text" name="myName" style="font-family: '幼圆';outline: none;"/></p>
+                <p>生日：<input type="text" name="myBirth" placeholder="格式为：xxxx.xx.xx" style="font-family: '幼圆';outline: none;"/></p><br/>
+                <p><input type="submit" class="submitButton" value="保存" /></p>
+                <a href="ChatApp.jsp" style="position: absolute;left: -70px;bottom:10px;text-decoration: none;color: gray">取消</a>
+            </form>
+        </div>
+        <div id="selectAvatar" class="selectAvatar" style="display: none;">
+            
+        </div>
+        
+    </body>
+</html>
+
+新增savePersonalInformation.jsp用于保存修改的信息
+代码：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            String userID=(String)session.getAttribute("userID");
+            String newAvatar=request.getParameter("newAvatar");
+            String newMySign=request.getParameter("mySign");
+            String newName=request.getParameter("myName");
+            String newBirth=request.getParameter("myBirth");
+            String newUserName=request.getParameter("userName");
+            newBirth=newBirth.substring(0,4)+"年"+newBirth.substring(5,7)+"月"+newBirth.substring(8,10)+"日";
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.PERSONINFORMATION set AVATAR='"+newAvatar+"',SIGNATURE='"+newMySign+"',NAME='"+newName+"',BIRTHDAY='"+newBirth+"',USERNAME='"+newUserName+"' where ID='"+userID+"'");
+            db.executeUpdate("update APP.ID_PSWD set USERNAME='"+newUserName+"' where ID='"+userID+"'");
+            db.closeDB();
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
+
+
+同时项目也进入了最后的核心部分。
+鸭梨山大。。。。
+其实主要是细节磨的太费神了，追求完美。。
+加油！！！
+还有GitHub老是上传失败。。。。难受
