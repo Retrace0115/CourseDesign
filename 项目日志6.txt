@@ -1,0 +1,1169 @@
+2020.06.08
+   websocket功能写了一半
+代码：
+package CourseDesignPackage;
+
+import javax.websocket.*;
+import javax.websocket.server.PathParam;
+import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+ 
+@ServerEndpoint("/chat/{userId}")
+public class WebSocketChat{
+ 
+    private static int onlineCount = 0;  
+    private static Map<String, WebSocketChat> clients = new ConcurrentHashMap<String, WebSocketChat>();
+    private Session session;
+    private String userId;
+    private static int id = 0;
+ 
+    /**
+     * 打开连接，保存连接的用户
+     * @param session
+     * @param userId
+     * @throws IOException
+     */
+    @OnOpen
+    public void onOpen(Session session, @PathParam("userId") String userId) throws IOException {
+        this.session = session;
+        this.userId = userId;
+        addOnlineCount();  
+        clients.put(userId, this);
+        System.out.println(onlineCount);
+    }
+ 
+    /**
+     * 关闭连接，删除用户
+     * @throws IOException
+     */
+    @OnClose
+    public void onClose() throws IOException {
+        clients.remove(this.userId);
+        subOnlineCount();  
+    }
+ 
+    /**
+     * 发送消息
+     * @param message
+     * @throws IOException
+     */
+    @OnMessage
+    public void onMessage(String message) throws IOException {
+        String sendUid = message.substring(0,message.indexOf(","));
+        String getUid = message.substring(message.lastIndexOf(",")+1);
+        System.out.println("有"+getUid+"的消息：");
+        String messageContent = message.substring(message.indexOf(",")+1,message.lastIndexOf(","));
+        if(getUid.equals("ALL")){
+            System.out.println("全体消息："+message);
+            sendMessageAll(messageContent);
+        }else{
+            System.out.println("私信："+message);
+            sendMessageTo(messageContent,sendUid,getUid);
+        }
+    }
+ 
+    /**
+     * 错误打印
+     * @param session
+     * @param error
+     */
+    @OnError
+    public void onError(Session session, Throwable error) {
+        error.printStackTrace();  
+    }
+ 
+    /**
+     * 消息发送
+     * @param message
+     * @param sendUid
+     * @param getUid
+     * @throws IOException
+     */
+    public void sendMessageTo(String message, String sendUid, String getUid) throws IOException {
+        WebSocketChat item = clients.get(getUid);
+        if(item != null) {
+            //消息内容包括发送者，接受者和消息内容
+            System.out.println("私信："+sendUid);
+            item.session.getAsyncRemote().sendText(sendUid+","+message+","+getUid);
+        }else{//离线消息发送
+ 
+        }
+    }
+ 
+    /**
+     * 群聊发送消息
+     * @param message
+     * @throws IOException
+     */
+    public void sendMessageAll(String message) throws IOException {
+        for(WebSocketChat item : clients.values()) {
+            item.session.getAsyncRemote().sendText(message);  
+        }  
+    }
+ 
+    /**
+     * 获取当前在线人数，线程安全
+     * @return
+     */
+    public static synchronized int getOnlineCount() {
+        return onlineCount;  
+    }
+ 
+    /**
+     * 添加当前在线人数
+     */
+    public static synchronized void addOnlineCount() {
+        WebSocketChat.onlineCount++;
+    }
+ 
+    /**
+     * 减少当前在线人数
+     */
+    public static synchronized void subOnlineCount() {
+        WebSocketChat.onlineCount--;
+    }
+ 
+    /**
+     *
+     * @return
+     */
+    public static synchronized Map<String, WebSocketChat> getClients() {
+        return clients;  
+    }
+}
+
+
+ChatApp.jsp文件更改
+代码:
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.io.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/ChatPageStyle.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/ChatPageMove.js"></script>
+        <script type="text/javascript">
+            var time1,time2,time3,time4;
+            var connect;
+            window.onload = function unit(){//初始化页面
+                //防止直接进入主程序
+                var testing="<%=(String)session.getAttribute("userID")%>";
+                if(testing==="null"){
+                    window.location.href="../html文件/Login.html";
+                }
+                if ("WebSocket" in window){
+                    // 打开一个 web socket
+                    connect = new WebSocket("ws://localhost:8080/CourseDesign/chat/"+testing);
+                    connect.onopen = function(){
+                        // Web Socket 已连接上
+                        alert("已连接");
+                    };
+                    connect.onmessage = function (evt){ 
+                       var r_msg = evt.data;
+                       alert(r_msg);
+                    };
+                    
+                    connect.onclose = function(){ 
+                      // 关闭 websocket
+                      alert("连接关闭");
+                    };
+                }
+                else{
+                   // 浏览器不支持 WebSocket
+                   alert("您的浏览器不支持 WebSocket!");
+                }
+                //获取个人信息
+                <%
+                    String userID=(String)session.getAttribute("userID");
+                    ConnectDataBase db=new ConnectDataBase();//连接数据库
+                    String avatar="";
+                    String name="";
+                    String signature="";
+                    String birthday="";
+                    String userName="";
+                    boolean state=false;
+                    //消息列表信息字符串变量合集
+                    String messageStr="";
+                    //好友列表信息字符串变量合集
+                    String FriendStr="";
+                    String FriendAvatarStr="";
+                    String FriendSignStr="";
+                    String FriendNameStr="";
+                    String FriendBirthStr="";
+                    String FriendUserNameStr="";
+                    String FriendStateStr="";
+                    //群聊列表信息字符串变量合集
+                    String GroupStr="";
+                    String GroupNameStr="";
+                    String GroupMembersStr="";
+                    String GroupOnlineNumberStr="";
+                    String GroupLeaderNameStr="";
+                    String GroupLeaderStr="";
+                    String GroupAvatarStr="";
+                    String GroupMembersAvatarArrayStr="";
+                    String GroupMembersUserNameArrayStr="";
+                    String GroupMembersAvatarStr="";
+                    String GroupMembersUserNameStr="";
+                    db.connect();
+                    ResultSet rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+userID+"'");
+                    try{
+                        if(rs.next()){
+                            avatar=rs.getString("AVATAR");
+                            name=rs.getString("NAME");
+                            signature=rs.getString("SIGNATURE");
+                            birthday=rs.getString("BIRTHDAY");
+                            userName=rs.getString("USERNAME");
+                            state=rs.getBoolean("STATE");
+                        }
+                        //加载消息列表数据
+                        String MessageStr="";
+                        String[] MessageArray;
+                        File myFilePath = new File("D:/ChatAppRecord/"+userID+"/messagelist.txt");
+                        /*文件写入操作
+                        FileWriter resultFile = new FileWriter(myFilePath,true);
+                        resultFile.write("");
+                        resultFile.close();*/
+                        //读取文件messagelist
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(myFilePath),"UTF-8"));
+                        String tempString = null;  
+                        // 一次读入一行，直到读入null为文件结束  
+                        while ((tempString = reader.readLine()) != null) {  
+                            messageStr=messageStr+tempString+"{-#$%^&*(*&^%-}";
+                        }
+                        reader.close();
+                        rs=null;
+                        db.closeDB();
+                        //加载好友列表数据
+                        db.connect();
+                        rs=db.executeQuery("select * from APP.FRIENDMAP where MY='"+userID+"' or YOU='"+userID+"'");
+                        String[] FriendArray;
+                        
+                        while(rs.next()){
+                            if(userID.equals(rs.getString("MY"))){
+                                FriendStr=FriendStr+rs.getString("YOU")+",";
+                            }
+                            if(userID.equals(rs.getString("YOU"))){
+                                FriendStr=FriendStr+rs.getString("MY")+",";
+                            }
+                        } 
+                        FriendArray=FriendStr.split(",");
+                        for(int i=0;i<FriendArray.length;i++){
+                            rs=null;
+                            db.closeDB();
+                            db.connect();
+                            rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID='"+FriendArray[i]+"'");
+                            while(rs.next()){
+                                FriendAvatarStr=FriendAvatarStr+rs.getString("AVATAR")+",";
+                                FriendSignStr=FriendSignStr+rs.getString("SIGNATURE")+"{--%^$$#@^&*--}";
+                                FriendNameStr=FriendNameStr+rs.getString("NAME")+"{--%^$$#@^&*--}";
+                                FriendBirthStr=FriendBirthStr+rs.getString("BIRTHDAY")+"{--%^$$#@^&*--}";
+                                FriendUserNameStr=FriendUserNameStr+rs.getString("USERNAME")+"{--%^$$#@^&*--}";
+                                FriendStateStr=FriendStateStr+String.valueOf(rs.getBoolean("STATE"))+",";
+                            }
+                        }
+                        rs=null;
+                        db.closeDB();
+                        //加载群聊列表数据
+                        db.connect();
+                        rs=db.executeQuery("select * from APP.GROUPMEMBERS where MEMBERSID='"+userID+"'");
+                        String[] GroupArray;
+                        while(rs.next()){
+                            GroupStr=GroupStr+rs.getString("GROUPID")+",";
+                        }
+                        GroupArray=GroupStr.split(",");
+                        for(int i=0;i<GroupArray.length;i++){
+                            rs=null;
+                            db.closeDB();
+                            db.connect();
+                            rs=db.executeQuery("select * from APP.GROUPCHAT where ID='"+GroupArray[i]+"'");
+                            while(rs.next()){
+                                GroupAvatarStr=GroupAvatarStr+rs.getString("GROUPAVATAR")+",";
+                                GroupLeaderNameStr=GroupLeaderNameStr+rs.getString("GROUPLEADERNAME")+"{--%^$$#@^&*--}";
+                                GroupLeaderStr=GroupLeaderStr+rs.getString("GROUPLEADER")+",";
+                                GroupOnlineNumberStr=GroupOnlineNumberStr+rs.getString("ONLINENUMBER");
+                                GroupMembersStr=GroupMembersStr+rs.getString("MEMBERS");
+                                GroupNameStr=GroupNameStr+rs.getString("NAME")+"{--%^$$#@^&*--}";
+                            }
+                            rs=null;
+                            db.closeDB();
+                            db.connect();
+                            rs=db.executeQuery("select * from APP.PERSONINFORMATION where ID in ( select MEMBERSID from APP.GROUPMEMBERS where GROUPID='"+GroupArray[i]+"')");
+                            while(rs.next()){
+                                GroupMembersAvatarStr=GroupMembersAvatarStr+rs.getString("AVATAR")+",";
+                                GroupMembersUserNameStr=GroupMembersUserNameStr+rs.getString("USERNAME")+"{--%^$$#@^&*--}";
+                            }
+                            GroupMembersAvatarArrayStr=GroupMembersAvatarArrayStr+GroupMembersAvatarStr+"{}";
+                            GroupMembersUserNameArrayStr=GroupMembersUserNameArrayStr+GroupMembersUserNameStr+"{--&(*&--}";
+                        }
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    db.closeDB();
+                %>
+                var avatar="<%=avatar%>",signature="<%=signature%>",name="<%=name%>",birthday="<%=birthday%>",userName="<%=userName%>";
+                var State="<%=state%>";
+                var userID="<%=(String)session.getAttribute("userID")%>";
+                var avatarNode=document.getElementById("myAvatar");
+                avatarNode.setAttribute("src","../images/"+avatar);
+                if(userName.length>9){
+                    document.getElementById("myUserName").innerHTML=userName.substring(0,9)+"..";
+                }
+                else{
+                    document.getElementById("myUserName").innerHTML=userName;
+                }
+                if(signature.length>11){
+                    document.getElementById("mySignature").innerHTML=signature.substring(0,11)+"...";
+                }
+                else{
+                    document.getElementById("mySignature").innerHTML=signature;
+                }
+                var Information=document.getElementById("Information");
+                
+                avatarNode.onmouseover=function(){//鼠标从头像上移开后
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                avatarNode.onmouseout=function(){//鼠标移动到头像上时
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                Information.onmouseover=function(){//鼠标移动到个人信息上时
+                    clearTimeout(time1);//清除定时器
+                    Information.style.display="inline-block";
+                };
+                Information.onmouseout=function(){//鼠标从个人信息上移开后
+                    time1=setTimeout("Information.style.display='none';",300);
+                };
+                var person=document.person;
+                if(userName.length>10){
+                    person.uName.value=userName.substring(0,10)+"...";
+                }
+                else{
+                    person.uName.value=userName;
+                }
+                if(signature.length>10){
+                    person.sign.value=signature.substring(0,10)+"...";
+                }
+                else{
+                    person.sign.value=signature;
+                }
+                person.ID.value=userID;
+                person.Name.value=name;
+                person.birth.value=birthday;
+                if(State==="true"){
+                    person.state.value="在线";
+                }
+                else{
+                    person.state.value="离线";
+                }
+                var fatherMenu=document.getElementById("fahterMenu");
+                var sonMenu=document.getElementById("sonMenu");
+                var stateButton=document.getElementById("stateButton");
+                var StateMenu=document.getElementById("StateMenu");
+                fatherMenu.onmouseover=function(){//鼠标移动到折叠菜单按钮上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    sonMenu.style.display="inline-block";
+                    StateMenu.style.display="none";
+                };
+                fatherMenu.onmouseout=function(){//鼠标从折叠菜单按钮上移开时
+                    time2=setTimeout("sonMenu.style.display='none';",300);
+                };
+                sonMenu.onmouseover=function(){//鼠标移动到折叠菜单子菜单上
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    sonMenu.style.display="inline-block";
+                };
+                sonMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time2=setTimeout("sonMenu.style.display='none';StateMenu.style.display='none';",300);
+                };
+                stateButton.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    StateMenu.style.display="inline-block";
+                };
+                stateButton.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                };
+                StateMenu.onmouseover=function(){
+                    clearTimeout(time2);//清除定时器
+                    clearTimeout(time3);//清除定时器
+                    clearTimeout(time4);//清除定时器
+                    StateMenu.style.display="inline-block";
+                    sonMenu.style.display="inline-block";
+                };
+                StateMenu.onmouseout=function(){//鼠标从折叠菜单子菜单上移开时
+                    time3=setTimeout("StateMenu.style.display='none';",300);
+                    time4=setTimeout("sonMenu.style.display='none';",300);
+                };
+                //加载消息列表
+                var ML=document.getElementById("ML");
+                var MLB=document.getElementById("MLB");
+                ML.style.display="inline-block";
+                MLB.style.backgroundColor="#333333";
+                var messageStr="<%=messageStr%>";
+                var mArray=messageStr.split("{-#$%^&*(*&^%-}");
+                for(var i=0;i<mArray.length-1;i++){
+                    var mpA=mArray[i].split("{--*%&￥&*#&*--}");
+                    var list=document.createElement("div");
+                    list.setAttribute("class","MFGList");
+                    list.setAttribute("id","MList_"+i.toString());
+                    var img=document.createElement("img");
+                    img.setAttribute("class","MFGListImg");
+                    img.setAttribute("src","../images/"+mpA[2]);
+                    img.setAttribute("id","MListi"+i.toString());
+                    list.append(img);
+                    var p=document.createElement("p");
+                    p.setAttribute("class","MFGListUserName");
+                    p.setAttribute("id","MListp"+i.toString());
+                    if(mpA[1].length>7){
+                        p.innerHTML=mpA[1].substring(0,6)+"...";
+                    }
+                    else {
+                        p.innerHTML=mpA[1];
+                    }
+                    list.append(p);
+                    var sign=document.createElement("p");
+                    sign.setAttribute("class","MFGListSign");
+                    sign.setAttribute("id","MLists"+i.toString());
+                    if(mpA[3].length>16){
+                        sign.innerHTML=" [消息] "+mpA[3].substring(0,14)+"...";
+                    }
+                    else{
+                        sign.innerHTML=" [消息] "+mpA[3];
+                    }
+                    list.append(sign);
+                     //创建消息界面
+                    var r_send=document.createElement("div");
+                    r_send.setAttribute("class","r_sendStyle");
+                    r_send.setAttribute("id","r_send"+i.toString());
+                    document.getElementById("right").append(r_send);
+                    var rsTop=document.createElement("p");
+                    rsTop.innerHTML=mpA[1]+"<br/>"+mpA[0];
+                    rsTop.setAttribute("class","rsTop");
+                    r_send.append(rsTop);
+                    var rsCenter=document.createElement("div");
+                    rsCenter.setAttribute("class","rsCenter");
+                    r_send.append(rsCenter);
+                    var rsBottom=document.createElement("div");
+                    rsBottom.setAttribute("class","rsBottom");
+                    var rsta=document.createElement("textarea");
+                    rsta.setAttribute("class","rsta");
+                    rsBottom.append(rsta);
+                    var sendButton=document.createElement("button");
+                    sendButton.setAttribute("class","sendButton");
+                    sendButton.innerHTML="发送";
+                    sendButton.onclick=function(){//监听发送按钮
+                        //发送信息
+                        var obj= window.event?event.srcElement:evt.target;
+                        var MCT=obj.parentNode.firstElementChild; 
+                        var num=obj.parentNode.parentNode.id.substring(6);
+                        var rID=mArray[num].split("{--*%&￥&*#&*--}");
+                        connect.send(testing+","+MCT.value.toString()+","+rID[0]);
+                    };
+                    rsBottom.append(sendButton);
+                    r_send.append(rsBottom);
+                    list.onclick=function(){
+                        var obj= window.event?event.srcElement:evt.target;
+                        var num=parseInt(obj.id.substring(6));
+                        for(var j=0;j<mArray.length-1;j++){
+                            if(j!==num){
+                                document.getElementById("r_send"+j.toString()).style.display="none";
+                            }
+                        }
+                        if(document.getElementById("r_send_test")){
+                            var r_send_test=document.getElementById("r_send_test");
+                            r_send_test.parentNode.removeChild(r_send_test);
+                        }
+                        
+                        var MRS=document.getElementById("r_send"+num.toString());
+                        MRS.style.display="inline-block";
+                        document.getElementById("content").style.display="none";
+                    };
+                    ML.append(list); 
+                }
+                //加载好友列表
+                var FL=document.getElementById("FL");
+                var friends="<%=FriendStr%>".split(",");//注意：最后一个字符串是空串!!!
+                var FriendAvatar="<%=FriendAvatarStr%>".split(",");
+                var FriendSign="<%=FriendSignStr%>".split("{--%^$$#@^&*--}");
+                var FriendName="<%=FriendNameStr%>".split("{--%^$$#@^&*--}");
+                var FriendBirth="<%=FriendBirthStr%>".split("{--%^$$#@^&*--}");
+                var FriendUserName="<%=FriendUserNameStr%>".split("{--%^$$#@^&*--}");
+                var FriendState="<%=FriendStateStr%>".split(",");
+                var FL=document.getElementById("FL");
+                for(var i=0;i<friends.length-1;i++){
+                    var list=document.createElement("div");
+                    list.setAttribute("class","MFGList");
+                    list.setAttribute("id","FList_"+i.toString());
+                    var img=document.createElement("img");
+                    img.setAttribute("class","MFGListImg");
+                    img.setAttribute("src","../images/"+FriendAvatar[i]);
+                    img.setAttribute("id","FListi"+i.toString());
+                    list.append(img);
+                    var p=document.createElement("p");
+                    p.setAttribute("class","MFGListUserName");
+                    p.setAttribute("id","FListp"+i.toString());
+                    if(FriendUserName[i].length>7){
+                        p.innerHTML=FriendUserName[i].substring(0,6)+"...";
+                    }
+                    else {
+                        p.innerHTML=FriendUserName[i];
+                    }
+                    if(FriendState[i]==="false"){
+                        p.innerHTML+="&nbsp;(离线)";
+                    }
+                    else if(FriendState[i]==="true"){
+                        p.innerHTML+="&nbsp;(在线)";
+                    }
+                    list.append(p);
+                    var sign=document.createElement("p");
+                    sign.setAttribute("class","MFGListSign");
+                    sign.setAttribute("id","FLists"+i.toString());
+                    if(FriendSign[i].length>18){
+                        sign.innerHTML=FriendSign[i].substring(0,16)+"...";
+                    }
+                    else{
+                        sign.innerHTML=FriendSign[i];
+                    }
+                    list.append(sign);
+                    list.onclick=function(){
+                        var obj= window.event?event.srcElement:evt.target;
+                        var num=parseInt(obj.id.substring(6));
+                        if(document.getElementById("r_send_test")){
+                            var r_send_test=document.getElementById("r_send_test");
+                            r_send_test.parentNode.removeChild(r_send_test);
+                        }
+                        var content=document.getElementById("content");
+                        content.style.display="inline-block";
+                        var str="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+                        var newline="<br/><br/><br/><br/><br/><br/><br/>";
+                        content.innerHTML="<br/><br/><br/><br/><br/><br/><br/><br/><br/>"+str;
+                        if(FriendState[num]==="false"){
+                            content.innerHTML+="昵称："+FriendUserName[num]+"<br/><br/>"+str+"ID&nbsp;&nbsp;："+friends[num]+"<br/><br/>"+str+"姓名："+FriendName[num]+"<br/><br/>"+str+"生日："+FriendBirth[num]+"<br/><br/>"+str+"签名："+FriendSign[num]+"<br/><br/>"+str+"状态：离线"+newline+str;
+                        }
+                        else if(FriendState[num]==="true"){
+                            content.innerHTML+="昵称："+FriendUserName[num]+"<br/><br/>"+str+"ID&nbsp;&nbsp;："+friends[num]+"<br/><br/>"+str+"姓名："+FriendName[num]+"<br/><br/>"+str+"生日："+FriendBirth[num]+"<br/><br/>"+str+"签名："+FriendSign[num]+"<br/><br/>"+str+"状态：在线"+newline+str;
+                        }
+                        var button=document.createElement("button");
+                        button.setAttribute("class","submitButton");
+                        button.innerHTML="发消息";
+                        button.onclick=function(){//转到聊天界面
+                            content.style.display="none";
+                            var flag=0;
+                            //加载聊天消息面板
+                            for(var l=0;l<mArray.length-1;l++){
+                                var mpa=mArray[l].split("{--*%&￥&*#&*--}");
+                                if(mpa[0]===friends[num]){
+                                    document.getElementById("r_send"+l.toString()).style.display="inline-block";
+                                    flag=1;
+                                    break;
+                                }
+                            }
+                            //若无则创建聊天消息面板
+                            if(flag===0){
+                                //创建消息界面
+                                var r_send=document.createElement("div");
+                                r_send.setAttribute("class","r_sendStyle");
+                                r_send.setAttribute("id","r_send_test");
+                                document.getElementById("right").append(r_send);
+                                var rsTop=document.createElement("p");
+                                rsTop.innerHTML=FriendUserName[num]+"<br/>"+friends[num];
+                                rsTop.setAttribute("class","rsTop");
+                                r_send.append(rsTop);
+                                var rsCenter=document.createElement("div");
+                                rsCenter.setAttribute("class","rsCenter");
+                                r_send.append(rsCenter);
+                                var rsBottom=document.createElement("div");
+                                rsBottom.setAttribute("class","rsBottom");
+                                var rsta=document.createElement("textarea");
+                                rsta.setAttribute("class","rsta");
+                                rsBottom.append(rsta);
+                                var sendButton=document.createElement("button");
+                                sendButton.setAttribute("class","sendButton");
+                                sendButton.innerHTML="发送";
+                                sendButton.onclick=function(){//监听发送按钮
+                        
+                                };
+                                rsBottom.append(sendButton);
+                                r_send.append(rsBottom);
+                                r_send.style.display="inline-block";
+                            }
+                        };
+                        content.append(button);
+                        for(var l=0;l<mArray.length-1;l++){
+                            document.getElementById("r_send"+l.toString()).style.display="none";
+                        }
+                    };
+                    FL.append(list);
+                }
+                //加载群聊列表
+                var GL=document.getElementById("GL");
+                var Group="<%=GroupStr%>".split(",");
+                var GroupName="<%=GroupNameStr%>".split("{--%^$$#@^&*--}");
+                var GroupMembers="<%=GroupMembersStr%>".split(",");
+                var GroupOnlineNumber="<%=GroupOnlineNumberStr%>".split(",");
+                var GroupLeaderName="<%=GroupLeaderNameStr%>".split("{--%^$$#@^&*--}");
+                var GroupLeader="<%=GroupLeaderStr%>".split(",");
+                var GroupAvatar="<%=GroupAvatarStr%>".split(",");
+                var GroupMembersAvatarArrayStr="<%=GroupMembersAvatarArrayStr%>".split("{}");
+                var GroupMembersUserNameArrayStr="<%=GroupMembersUserNameArrayStr%>".split("{--&(*&--}");
+                for(var i=0;i<Group.length-1;i++){
+                    var list=document.createElement("div");
+                    list.setAttribute("class","MFGList");
+                    list.setAttribute("id","GList_"+i.toString());
+                    var img=document.createElement("img");
+                    img.setAttribute("class","MFGListImg");
+                    img.setAttribute("src","../images/"+GroupAvatar[i]);
+                    img.setAttribute("id","GListi"+i.toString());
+                    list.append(img);
+                    var p=document.createElement("p");
+                    p.setAttribute("class","MFGListUserName");
+                    p.setAttribute("id","GListp"+i.toString());
+                    if(GroupName[i].length>7){
+                        p.innerHTML=GroupName[i].substring(0,6)+"..."+"("+GroupOnlineNumber[i]+"/"+GroupMembers[i]+")";
+                    }
+                    else {
+                        p.innerHTML=GroupName[i]+"("+GroupOnlineNumber[i]+"/"+GroupMembers[i]+")";
+                    }
+                    list.append(p);
+                    var sign=document.createElement("p");
+                    sign.setAttribute("class","MFGListSign");
+                    sign.setAttribute("id","MLists"+i.toString());
+                    sign.innerHTML="群ID："+Group[i];
+                    list.append(sign);
+                    list.onclick=function(){
+                        var obj= window.event?event.srcElement:evt.target;
+                        var num=parseInt(obj.id.substring(6));
+                        if(document.getElementById("r_send_test")){
+                            var r_send_test=document.getElementById("r_send_test");
+                            r_send_test.parentNode.removeChild(r_send_test);
+                        }
+                        var content=document.getElementById("content");
+                        content.style.display="inline-block";
+                        content.innerHTML="<br/>&nbsp;&nbsp;&nbsp;&nbsp;群&nbsp;名&nbsp;称："+GroupName[num]+"<br/>&nbsp;&nbsp;&nbsp;&nbsp;群&nbsp;&nbsp;&nbsp;&nbsp;ID："+Group[num]+"<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;群&nbsp;&nbsp;&nbsp;&nbsp;主："+GroupLeaderName[num]+"<br/>&nbsp;&nbsp;&nbsp;&nbsp;群主&nbsp;&nbsp;ID："+GroupLeader[num]+"<br/><br/>&nbsp;&nbsp;&nbsp;&nbsp;群&nbsp;成&nbsp;员：";
+                        var div=document.createElement("div");
+                        div.setAttribute("class","GroupMembersMessage");
+                        var GroupMembersAvatar=GroupMembersAvatarArrayStr[num].split(",");
+                        var GroupMembersUserName=GroupMembersUserNameArrayStr[num].split("{--%^$$#@^&*--}");
+                        for(var k=0;k< GroupMembersAvatar.length-1;k++){
+                            var avatarDiv=document.createElement("div");
+                            avatarDiv.style.width="60px";
+                            avatarDiv.style.height="80px";
+                            avatarDiv.style.fontSize="10px";
+                            avatarDiv.style.textAlign="center";
+                            avatarDiv.style.border="0";
+                            avatarDiv.style.float="left";
+                            var avatarImg=document.createElement("img");
+                            avatarImg.setAttribute("class","MFGListImg");
+                            avatarImg.setAttribute("src","../images/"+GroupMembersAvatar[k]);
+                            avatarImg.style.border="1px solid gray";
+                            avatarImg.style.cursor="default";
+                            avatarDiv.append(avatarImg);
+                            if(GroupMembersUserName[k].length>4){
+                                avatarDiv.innerHTML+=GroupMembersUserName[k].substring(0,4)+"...";
+                            }
+                            else{
+                                avatarDiv.innerHTML+=GroupMembersUserName[k];
+                            }
+                            div.append(avatarDiv);
+                        }
+                        content.append(div);
+                        var button=document.createElement("button");
+                        button.setAttribute("class","submitButton");
+                        button.innerHTML="进入群聊";
+                        button.style.position="absolute";
+                        button.style.left="36%";
+                        button.style.top="90%";
+                        button.onclick=function(){//转到聊天界面
+                            content.style.display="none";
+                            var flag=0;
+                            //加载聊天消息面板
+                            for(var l=0;l<mArray.length-1;l++){
+                                var mpa=mArray[l].split("{--*%&￥&*#&*--}");
+                                if(mpa[0]===Group[num]){
+                                    document.getElementById("r_send"+l.toString()).style.display="inline-block";
+                                    flag=1;
+                                    break;
+                                }
+                            }
+                            //若无则创建聊天消息面板
+                            if(flag===0){
+                                //创建消息界面
+                                var r_send=document.createElement("div");
+                                r_send.setAttribute("class","r_sendStyle");
+                                r_send.setAttribute("id","r_send_test");
+                                document.getElementById("right").append(r_send);
+                                var rsTop=document.createElement("p");
+                                rsTop.innerHTML=GroupName[num]+"<br/>"+Group[num];
+                                rsTop.setAttribute("class","rsTop");
+                                r_send.append(rsTop);
+                                var rsCenter=document.createElement("div");
+                                rsCenter.setAttribute("class","rsCenter");
+                                r_send.append(rsCenter);
+                                var rsBottom=document.createElement("div");
+                                rsBottom.setAttribute("class","rsBottom");
+                                var rsta=document.createElement("textarea");
+                                rsta.setAttribute("class","rsta");
+                                rsBottom.append(rsta);
+                                var sendButton=document.createElement("button");
+                                sendButton.setAttribute("class","sendButton");
+                                sendButton.innerHTML="发送";
+                                sendButton.onclick=function(){//监听发送按钮
+                        
+                                };
+                                rsBottom.append(sendButton);
+                                r_send.append(rsBottom);
+                                r_send.style.display="inline-block";
+                            }
+                        };
+                        content.append(button);
+                        for(var l=0;l<mArray.length-1;l++){
+                            document.getElementById("r_send"+l.toString()).style.display="none";
+                        }
+                    };
+                    GL.append(list);
+                }
+            };
+        </script>
+    </head>
+    <body>
+        <div id="Information">
+            <form action="SavePersonalInformation.jsp" method="post" name="person"><!--修改个人信息表单-->
+                <p>&nbsp;&nbsp;您的&nbsp;ID&nbsp;：<input type="text" disabled name="ID" class="look"/></p>
+                <p>&nbsp;&nbsp;您的昵称：<input type="text" readonly name="uName" class="look"/></p>
+                <p>&nbsp;&nbsp;个性签名：<input type="text" readonly name="sign" class="look"/></p>
+                <p>&nbsp;&nbsp;您的姓名：<input type="text" readonly name="Name" class="look"/></p>
+                <p>&nbsp;&nbsp;您的生日：<input type="text" readonly name="birth" class="look"/></p>
+                <p>&nbsp;&nbsp;当前状态：<input type="text" readonly name="state" class="look"/></p>
+            </form>
+        </div>
+        <div class="ChatMainPanel">
+            <div class="left">
+                <div class="leftTop"><!--顶部展示个人头像昵称和签名信息-->
+                    <img id="myAvatar" alt="头像" />
+                    <p id="myUserName"></p>
+                    <p id="mySignature"></p>
+                    <p class="found"><!--搜索框-->
+                        <input id="inputFound" class="inputFound" onfocus="clickFound()" onblur="loseFound()" type="text" placeholder=" 输入ID 搜索/添加 好友/群聊..."/>
+                        <button id="buttonFound" onfocus="clickFound()" onblur="loseFound()" class="buttonFound">搜索</button>
+                    </p>
+                </div>
+                <div id="leftCenter" class="leftCenter"><!--联系人消息选项卡-->
+                    <div id="MLB" class="MLB" onclick="selected('message')">消息</div>
+                    <div id="ML" class="List"></div>
+                    <div id="FLB" class="FLB" onclick="selected('friend')">好友</div>
+                    <div id="FL" class="List"></div>
+                    <div id="GLB" class="GLB" onclick="selected('group')">群聊</div>
+                    <div id="GL" class="List"></div>
+                </div>
+                <div class="leftBottom"><!--底部放置设置折叠菜单-->
+                    <input type="button" id="fahterMenu" class="fahterMenu" value="☰"/>
+                </div>
+                <div id="sonMenu"><!--隐藏的菜单-->
+                    <li onclick="editMyInformation()">编辑资料</li>
+                    <li onclick="changePassWord()">修改密码</li>
+                    <li id="stateButton">切换状态</li>
+                    <li onclick="Exit()">注销账号</li>
+                </div>
+                <div id="StateMenu">
+                    <li onclick="changeIsOnLine()">我在线上</li>
+                    <li onclick="changeIsOffLine()">离线</li>
+                </div>
+            </div>
+            <div id="right" class="right">
+                <div style="position: absolute;left:47%;top: 47%;border:0;color: lightgray;font-size: 50px;background: rgba(0,0,0,0);">欢迎使用微讯！</div>
+                <div id="content"></div>
+            </div> 
+        </div>
+    </body>
+</html>
+
+
+ChatPageStyle.css文件更改
+新增代码：
+.MLB, .FLB, .GLB{/*设置选项卡按钮的样式*/
+    float: left;
+    width: 33%;
+    border: 0;
+    text-align: center;
+    line-height: 36px;
+    background: rgba(0,0,0,0.4);
+    cursor: pointer;
+    color:white;
+    margin-top:1px;
+}
+.MLB{/*设置选项卡消息按钮的样式*/
+    width: 34%;
+    border-top-left-radius: 5px;
+}
+.GLB{/*设置选项卡群聊按钮的样式*/
+    border-top-right-radius: 5px;
+}
+/*-----------设置鼠标移动到选项卡按钮上方时按钮的样式-----------*/
+.MLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+.FLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+.GLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+/*---------------------------------------------------------*/
+.List{/*设置选项卡面板的样式*/
+    display: none;
+    position: absolute;
+    border: 0;
+    background:  rgba(255,0,0,0);
+    width:30%;
+    height: 74%;
+    top:21%;
+    left:0;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+.MFGList{/*设置三个列表的列表项的样式*/
+    border: 0;
+    border-bottom:1px solid gray;
+    background-color: #333333;
+    width: 100%;
+    height: 60px;
+}
+.MFGList:hover{/*设置鼠标移动到三个列表的列表项上方时列表项的样式*/
+    background:  rgba(255,255,255,0.2);
+    cursor: pointer;
+}
+.MFGListImg{/*设置三个列表的列表项的图片的样式*/
+    border: 1px solid white;
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    position: relative;
+    margin: 4px;
+    cursor: pointer;
+}
+.MFGListUserName{/*设置三个列表的列表项的昵称的样式*/
+    width: 180px;
+    height:20px; 
+    color: white;
+    position: relative;
+    margin-left:80px;
+    margin-top: -50px;
+    cursor: pointer;
+}
+.MFGListSign{/*设置三个列表的列表项的签名的样式*/
+    width: 180px;
+    height:20px; 
+    border: 0;
+    color: white;
+    position: relative;
+    margin-left:80px;
+    margin-top: -10px;
+    font-size: 10px;
+    cursor: pointer;
+}
+#content{/*设置右侧面板展示样式*/
+    position: absolute;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+    display: none;
+    cursor: default;
+}
+
+.GroupMembersMessage{/*设置群成员信息展示部分样式*/
+    border: 1px dashed lightgray; 
+    position: absolute;
+    width: 66%;
+    height: 64%;
+    left:17%;
+    top:21%;
+    background-color: white;
+    text-align: left;
+}
+.r_sendStyle{/*右侧消息界面样式*/
+    position: absolute;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+    display: none;
+    cursor: default;
+}
+.rsTop{/*右侧消息界面顶部展示样式*/
+    position: absolute;
+    margin-top:0px;
+    width: 100%;
+    height: 7%;
+    border-top-right-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 1px 5px 1px gray;
+    font-family: "幼圆";
+    line-height: 22px;
+}
+.rsCenter{/*右侧消息界面中间展示样式*/
+    position: absolute;
+    top:7%;
+    width: 100%;
+    height: 65%;
+}
+.rsBottom{/*右侧消息界面底部展示样式*/
+    position: absolute;
+    bottom:0px;
+    width: 100%;
+    height: 28%;
+    border-bottom-right-radius: 10px;
+    box-shadow: 0px -1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.rsta{/*右侧消息界面底部文本域样式*/
+    border: 0;
+    outline: none;
+    resize: none;
+    width: 626px;
+    height: 164px;
+    border-bottom-right-radius: 10px;
+    font-size: 16px;
+    font-family: "幼圆";
+}
+.sendButton{/*设置发送按钮的样式*/
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    width: 60px;
+    height: 25px;
+    font-size: 14px;
+    font-family: "幼圆";
+    border-radius: 2px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    
+}
+.sendButton:hover{/*设置鼠标移动到发送按钮上时按钮的样式*/
+    background-color:#54FF9F;/*消息气泡颜色：#00FF7F*/
+}
+
+savePersonalInformation.jsp代码改动：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            String userID=(String)session.getAttribute("userID");
+            String newAvatar=request.getParameter("newAvatar");
+            String newMySign=request.getParameter("mySign");
+            String newName=request.getParameter("myName");
+            String newBirth=request.getParameter("myBirth");
+            String newUserName=request.getParameter("userName");
+            newBirth=newBirth.substring(0,4)+"年"+newBirth.substring(5,7)+"月"+newBirth.substring(8,10)+"日";
+            ConnectDataBase db=new ConnectDataBase();
+            db.connect();
+            db.executeUpdate("update APP.PERSONINFORMATION set AVATAR='"+newAvatar+"',SIGNATURE='"+newMySign+"',NAME='"+newName+"',BIRTHDAY='"+newBirth+"',USERNAME='"+newUserName+"' where ID='"+userID+"'");
+            db.executeUpdate("update APP.ID_PSWD set USERNAME='"+newUserName+"' where ID='"+userID+"'");
+            ResultSet rs=db.executeQuery("select * from APP.GROUPCHAT where GROUPLEADER='"+userID+"'");
+            if(rs.next()){
+                db.executeUpdate("update APP.GROUPCHAT set GROUPLEADERNAME='"+newUserName+"' where GROUPLEADER='"+userID+"'");
+            }
+            db.closeDB();
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
+
+validateLogon.jsp文件有改动：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.io.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <%
+            File myFolderPath = new File("D:/ChatAppRecord");   
+            if (!myFolderPath.exists()&&myFolderPath.isDirectory()){   
+                myFolderPath.mkdir();
+            }
+            ConnectDataBase db = new ConnectDataBase();
+            db.connect();
+            request.setCharacterEncoding("utf-8");
+            String username1=request.getParameter("username");
+            String password1=request.getParameter("pswd");
+            ResultSet rs = db.executeQuery("select * from APP.ID_PSWD where ID='"+username1+"'");
+            try{
+                if(rs.next()){
+                    String password2=rs.getString("PSWD");
+                    if(password1.equals(password2)){
+                        db.executeUpdate("update APP.PERSONINFORMATION set STATE='true' where ID='"+username1+"'");
+                        rs=null;
+                        db.closeDB();
+                        //创建个人消息文件夹
+                        File myFolderPath2 = new File("D:/ChatAppRecord/"+username1);   
+                        if (!myFolderPath2.exists()&&myFolderPath.isDirectory()){   
+                            myFolderPath2.mkdir();
+                        }
+                        //创建消息记录文件
+                        db.connect();
+                        rs=db.executeQuery("select * from APP.FRIENDMAP where MY='"+username1+"' or YOU='"+username1+"'");
+                        while(rs.next()){
+                            File myFilePath = new File("D:/ChatAppRecord/"+username1+"/"+rs.getString("RECORDFILE")+".txt");   
+                            if (!myFilePath.exists()) {   
+                                myFilePath.createNewFile();   
+                            }    
+                        }
+                        rs=null;
+                        db.closeDB();
+                        db.connect();
+                        rs=db.executeQuery("select * from APP.GROUPMEMBERS where MEMBERSID='"+username1+"'");
+                        while(rs.next()){
+                            File myFilePath = new File("D:/ChatAppRecord/"+username1+"/"+rs.getString("RECORDFILE")+".txt");   
+                            if (!myFilePath.exists()) {   
+                                myFilePath.createNewFile();   
+                            }   
+                        }
+                        File myFilePath = new File("D:/ChatAppRecord/"+username1+"/messagelist.txt");
+                        if (!myFilePath.exists()) {   
+                            myFilePath.createNewFile();   
+                        }   
+                        db.closeDB();
+                        //跳转到主页面
+                        session.setAttribute("userID",username1);
+                        session.setAttribute("userPswd",password1);
+                        response.sendRedirect("ChatApp.jsp");
+                    }
+                    else{
+                        out.println("<script  language='JavaScript'>alert('密码错误！');window.location.href='../html文件/Login.html';</script>");
+                    }
+                    db.closeDB();
+                }
+                db.closeDB();
+                out.println("<script  language='JavaScript'>alert('该用户不存在！');window.location.href='../html文件/Login.html';</script>");
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        %>
+    </body>
+</html>
+
+
+ValidateRegister.jsp有改动：
+<%@page contentType="text/html" pageEncoding="UTF-8" import="CourseDesignPackage.*"%>
+<%@page import="java.sql.*,java.util.Random,java.io.*"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>微讯</title>
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <%
+            request.setCharacterEncoding("utf-8");
+            //获取注册表单数据
+            String userName=request.getParameter("registerName");
+            String pswd=request.getParameter("registerPswd");
+            String number=request.getParameter("registerNumber");
+            ConnectDataBase db=new ConnectDataBase();//连接数据库
+            db.connect();
+            //分配ID
+            String ID="";
+            Random rand = new Random();
+            rand.nextInt(9);
+            while(true){
+                for(int i=0;i<10;i++){
+                    int num = 0;
+                    if(i==0){
+                        num=rand.nextInt(9)+1;
+                    }
+                    else{
+                        num=rand.nextInt(10);
+                    }
+                    ID+=String.valueOf(num);
+                }
+                ResultSet rs=db.executeQuery("select * from APP.ID_PSWD where ID='"+ID+"'");
+                if(rs.next()){
+                    continue;
+                }
+                else{
+                    break;
+                }
+            }
+            db.executeUpdate("INSERT INTO APP.ID_PSWD (ID, PSWD, NUMBER, USERNAME) VALUES ('"+ID+"', '"+pswd+"', '"+number+"', '"+userName+"')");
+            db.executeUpdate("INSERT INTO APP.PERSONINFORMATION (ID, AVATAR, SIGNATURE, NAME, BIRTHDAY,USERNAME,STATE) VALUES ('"+ID+"', 'DefaultAvatar.gif', '', '', '','"+userName+"','true')");
+            db.closeDB();
+            
+            File myFolderPath = new File("D:/ChatAppRecord");   
+            if (!myFolderPath.exists()&&myFolderPath.isDirectory()){   
+                myFolderPath.mkdir();
+            }
+            //创建个人消息文件夹
+            File myFolderPath2 = new File("D:/ChatAppRecord/"+ID);   
+            if (!myFolderPath2.exists()&&myFolderPath.isDirectory()){   
+                myFolderPath2.mkdir();
+            }
+            //创建消息记录文件
+            db.connect();
+            ResultSet rs=db.executeQuery("select * from APP.FRIENDMAP where MY='"+ID+"' or YOU='"+ID+"'");
+            try{
+                while(rs.next()){
+                    File myFilePath = new File("D:/ChatAppRecord/"+ID+"/"+rs.getString("RECORDFILE")+".txt");
+                    if (!myFilePath.exists()) {   
+                        myFilePath.createNewFile();   
+                    }   
+                }
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+            rs=null;
+            db.closeDB();
+            db.connect();
+            rs=db.executeQuery("select * from APP.GROUPMEMBERS where MEMBERSID='"+ID+"'");
+            while(rs.next()){
+                File myFilePath = new File("D:/ChatAppRecord/"+ID+"/"+rs.getString("RECORDFILE")+".txt");   
+                if (!myFilePath.exists()) {   
+                    myFilePath.createNewFile();   
+                }   
+            }
+            File myFilePath = new File("D:/ChatAppRecord/"+ID+"/messagelist.txt");
+            if (!myFilePath.exists()) {   
+                myFilePath.createNewFile();   
+            }   
+            db.closeDB();
+            //添加消息列表索引文件
+            //跳转到主页面
+            session.setAttribute("userID",ID);
+            response.sendRedirect("ChatApp.jsp");
+        %>
+    </body>
+</html>
