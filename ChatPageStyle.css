@@ -1,0 +1,656 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 2020-6-3, 9:56:39
+    Author     : KevinTech
+*/
+body{
+    background-image: url(../images/ChatBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    font-family: "幼圆";
+    background-color: black;
+}
+.ChatMainPanel{/*聊天主面板样式设置*/
+    border: 0;
+    width: 900px;
+    height: 600px;
+    position: absolute;
+    left:20%;
+    top: 60px;
+    background-color: white;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    font-family: "幼圆";
+}
+.left{/*左侧面板样式设置*/
+    float: left;
+    border: 0;
+    width: 30%;
+    height: 100%;
+    background-color: #333333;
+    border-bottom-left-radius: 10px;
+    border-top-left-radius: 10px;
+    color: white;
+    font-family: "幼圆";
+}
+.leftTop{/*左侧面板顶部样式设置*/
+    border-top-left-radius: 10px;
+    width: 100%;
+    height: 15%;
+    box-shadow: 0px 1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.leftCenter{/*左侧面板中间样式设置*/
+    width: 100%;
+    height: 80%;
+    overflow: auto;
+    font-family: "幼圆";
+}
+.leftBottom{/*左侧面板底部样式设置*/
+    border-bottom-left-radius: 10px;
+    width: 100%;
+    height: 5%;
+    box-shadow: 0px -1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.right{/*右侧面板样式设置*/
+    float: right;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+}
+
+#myUserName{/*设置昵称样式*/
+    position: absolute;
+    margin-left:70px;
+    margin-top:10px;
+    width: 200px;
+    height:30px; 
+    font-size: 20px;
+    font-family: "幼圆";
+    cursor: default;
+}
+#myAvatar{/*设置头像样式*/
+    position: absolute;
+    margin-left:10px;
+    margin-top:10px;
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    cursor: pointer;
+}
+#myAvatar:hover{/*设置鼠标移动到头像上方时头像的样式*/
+    box-shadow: 0px 0px 5px 1px gray;
+}
+#mySignature{/*设置签名样式*/
+    position: absolute;
+    margin-left:70px;
+    margin-top:40px;
+    float: right;
+    height:20px; 
+    width: 200px;
+    font-family: "幼圆";
+    cursor: default;
+}
+.found{/*设置搜索框样式*/
+    position: absolute;
+    margin-left:0;
+    margin-top:60px;
+    width: 270px;
+    height:30px; 
+    font-family: "幼圆";
+}
+.inputFound{/*设置搜索框样式*/
+    position: absolute;
+    margin-top: 1%;
+    margin-left:0;
+    height: 86%;
+    width:75%;
+    border: 0;
+    border-right: 1px solid gray;
+    background: rgba(255,255,255,0.5);
+    outline: none;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+.inputFound:hover{/*设置鼠标移动到搜索框上方时搜索框的样式*/
+    background: rgba(255,255,255,0.8);
+}
+.buttonFound{/*设置搜索按钮样式*/
+    position: absolute;
+    margin-top: 1%;
+    margin-left:206px;
+    width: 24%;
+    height: 91%;
+    border: 0;
+    border-left: 1px solid gray;
+    background: rgba(255,255,255,0.5);
+    outline: none;
+    cursor: pointer;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+.buttonFound:hover{/*设置鼠标移动到搜索按钮上方时搜索按钮的样式*/
+    background: rgba(255,255,255,0.8);
+}
+#Information{/*个人信息盒子样式设置*/
+    display: none;
+    position: absolute;
+    width: 270px;
+    height: 250px;
+    box-shadow: 4px 4px 10px 2px gray;
+    top:60px;
+    left: 15px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.8);
+    z-index: 1;
+}
+
+.look{/*设置修改个人信息表单的input框的样式*/
+    outline: none;
+    border:0;
+    background: rgba(255,255,255,0);
+    font-family: '幼圆';
+}
+div .fahterMenu{/*设置折叠菜单按钮样式*/
+    background:rgba(255,255,255,0);
+    border: 0;
+    outline: none;
+    margin-left: 20px;
+    margin-top: 0px;
+    cursor: pointer;
+    color: white;
+    height: 30px;
+    border-radius: 3px;
+}
+.fahterMenu:hover{/*设置鼠标移动到折叠菜单按钮上时的样式*/
+    background:rgba(255,255,255,0.2);
+}
+#sonMenu{/*设置折叠菜单子菜单样式*/
+    display: none;
+    background: rgba(255,255,255,0.9);
+    position: absolute;
+    bottom: 31px;
+    left:20px;
+    border: 0;
+    box-shadow: 0px 0px 7px 1px gray;
+    color: black;
+    border-radius: 5px;
+    width:20%;
+    height: 160px;
+    text-align: center;
+}
+#sonMenu li{/*设置折叠菜单子菜单菜单项样式*/
+    height: 25%;
+    border: 0;
+    border-radius: 5px;
+    list-style: none;
+    cursor: pointer;
+    line-height: 40px;
+    z-index: 999;
+}
+#sonMenu li:hover{/*设置鼠标移动到折叠菜单子菜单菜单项上时的样式*/
+    background:rgba(255,255,255,1);
+}
+#StateMenu{/*设置折叠菜单三级子菜单的样式*/
+    display: none;
+    background: rgba(255,255,255,0.9);
+    position: absolute;
+    bottom: 51px;
+    left:205px;
+    border: 0;
+    box-shadow: 0px 0px 7px 1px gray;
+    color: black;
+    border-radius: 5px;
+    width:15%;
+    height: 80px;
+    text-align: center;
+    z-index: 999;
+}
+#StateMenu li{/*设置折叠菜单三级子菜单菜单项样式*/
+    height: 50%;
+    border: 0;
+    border-radius: 5px;
+    list-style: none;
+    cursor: pointer;
+    line-height: 40px;
+}
+#StateMenu li:hover{/*设置鼠标移动到折叠菜单三级子菜单菜单项上时的样式*/
+    background:rgba(255,255,255,1);
+}
+
+.editInform{/*设置修改信息面板样式*/
+    border: 0;
+    width: 360px;
+    height: 650px;
+    position: absolute;
+    left:37%;
+    top: 30px;
+    background-color: white;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    font-family: "幼圆";
+    background-image: url(../images/EditInformBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+#editForm{/*设置修改信息表单样式*/
+    position: absolute;
+    bottom: 0;
+    left:22%;
+    width: 80%;
+    height: 50%;
+}
+#avatar{/*设置预选头像的样式*/
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 1px gray;
+    margin-left: 20px;
+}
+.submitButton{/*设置提交按钮的样式*/
+    width: 200px;
+    height: 30px;
+    cursor: pointer; 
+    border: 0; 
+    border-radius: 5px;
+    background-color: lightskyblue;
+    outline: none;
+    font-family: '幼圆';
+}
+.submitButton:hover{/*设置鼠标移动到提交按钮上方时按钮的样式*/
+    background-color: cyan;
+}
+.selectAvatar{/*设置头像选择区的样式*/
+    width: 300px;
+    height: 303px;
+    overflow: auto;
+    box-shadow: 4px 4px 10px 2px gray;
+    border-radius: 10px;
+    background-color: white;
+    position: absolute;
+    left:61%;
+    top:377px;
+}
+/*-------------------------设置滚动条的样式-------------------------*/
+.selectAvatar::-webkit-scrollbar {/*滚动条整体样式*/
+    width: 4px;     /*高宽分别对应横竖滚动条的尺寸*/
+    height: 300px;
+}
+.selectAvatar::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.2);
+}
+.selectAvatar::-webkit-scrollbar-track {/*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.1);
+}
+/*-----------------------------------------------------------------*/
+.imgStyle{/*设置头像选择区头像的样式*/
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0px 0px 5px 1px gray;
+    position: relative;
+    margin: 11px;
+}
+.imgStyle:hover{/*设置鼠标移动到头像选择区头像上方时的样式*/
+    box-shadow: 0px 0px 10px 2px gray;
+    transform: scale(1.3);
+}
+.changePassWord{/*设置修改密码面板的样式*/
+    width: 400px;
+    height: 400px;
+    position: absolute;
+    left:37%;
+    top: 160px;
+    background-image: url(../images/changePassWordBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+    border-radius: 10px;
+    font-family: "幼圆";
+    text-align: center;
+}
+.MLB, .FLB, .GLB{/*设置选项卡按钮的样式*/
+    float: left;
+    width: 33%;
+    border: 0;
+    text-align: center;
+    line-height: 36px;
+    background: rgba(0,0,0,0.4);
+    cursor: pointer;
+    color:white;
+    margin-top:1px;
+}
+.MLB{/*设置选项卡消息按钮的样式*/
+    width: 34%;
+    border-top-left-radius: 5px;
+}
+.GLB{/*设置选项卡群聊按钮的样式*/
+    border-top-right-radius: 5px;
+}
+/*-----------设置鼠标移动到选项卡按钮上方时按钮的样式-----------*/
+.MLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+.FLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+.GLB:hover{
+    background: rgba(255,255,255,0.7);
+    color:black;
+}
+/*---------------------------------------------------------*/
+.List{/*设置选项卡面板的样式*/
+    display: none;
+    position: absolute;
+    border: 0;
+    background:  rgba(255,0,0,0);
+    width:30%;
+    height: 74%;
+    top:21%;
+    left:0;
+    overflow: auto;
+    overflow-x: hidden;
+}
+
+.MFGList{/*设置三个列表的列表项的样式*/
+    border: 0;
+    border-bottom:1px solid gray;
+    background-color: #333333;
+    width: 100%;
+    height: 60px;
+}
+.MFGList:hover{/*设置鼠标移动到三个列表的列表项上方时列表项的样式*/
+    background:  rgba(255,255,255,0.2);
+    cursor: pointer;
+}
+.MFGListImg{/*设置三个列表的列表项的图片的样式*/
+    border: 1px solid white;
+    width: 50px;
+    height:50px; 
+    border-radius: 50%;
+    position: relative;
+    margin: 4px;
+    cursor: pointer;
+}
+.MFGListUserName{/*设置三个列表的列表项的昵称的样式*/
+    width: 180px;
+    height:20px; 
+    color: white;
+    position: relative;
+    margin-left:80px;
+    margin-top: -50px;
+    cursor: pointer;
+}
+.MFGListSign{/*设置三个列表的列表项的签名的样式*/
+    width: 180px;
+    height:20px; 
+    border: 0;
+    color: white;
+    position: relative;
+    margin-left:80px;
+    margin-top: -10px;
+    font-size: 10px;
+    cursor: pointer;
+}
+#content{/*设置右侧面板展示样式*/
+    position: absolute;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+    display: none;
+    cursor: default;
+}
+
+.GroupMembersMessage{/*设置群成员信息展示部分样式*/
+    border: 1px dashed lightgray; 
+    position: absolute;
+    width: 66%;
+    height: 64%;
+    left:17%;
+    top:21%;
+    background-color: white;
+    text-align: left;
+}
+.r_sendStyle{/*右侧消息界面样式*/
+    position: absolute;
+    border: 0;
+    width: 70%;
+    height: 100%;
+    background-color: #F8F8FF;
+    border-bottom-right-radius: 10px;
+    border-top-right-radius: 10px;
+    font-family: "幼圆";
+    display: none;
+    cursor: default;
+    overflow: hidden;
+}
+
+.rsTop{/*右侧消息界面顶部展示样式*/
+    position: absolute;
+    margin-top:0px;
+    width: 100%;
+    height: 7%;
+    border-top-right-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 1px 5px 1px gray;
+    font-family: "幼圆";
+    line-height: 22px;
+}
+.rsCenter{/*右侧消息界面中间展示样式*/
+    position: absolute;
+    top:7%;
+    width: 100%;
+    height: 65%;
+    overflow: auto;
+}
+/*-------------------------设置滚动条的样式-------------------------*/
+.rsCenter::-webkit-scrollbar {/*滚动条整体样式*/
+    width: 4px;     /*高宽分别对应横竖滚动条的尺寸*/
+    height: 300px;
+}
+.rsCenter::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.2);
+}
+.rsCenter::-webkit-scrollbar-track {/*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    background: rgba(0,0,0,0.1);
+}
+/*-----------------------------------------------------------------*/
+.rsBottom{/*右侧消息界面底部展示样式*/
+    position: absolute;
+    bottom:0px;
+    width: 100%;
+    height: 28%;
+    border-bottom-right-radius: 10px;
+    box-shadow: 0px -1px 5px 1px gray;
+    font-family: "幼圆";
+}
+.rsta{/*右侧消息界面底部文本域样式*/
+    border: 0;
+    outline: none;
+    resize: none;
+    width: 626px;
+    height: 164px;
+    border-bottom-right-radius: 10px;
+    font-size: 16px;
+    font-family: "幼圆";
+}
+.sendButton{/*设置发送按钮的样式*/
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    width: 60px;
+    height: 25px;
+    font-size: 14px;
+    font-family: "幼圆";
+    border-radius: 2px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    
+}
+.sendButton:hover{/*设置鼠标移动到发送按钮上时按钮的样式*/
+    background-color:#54FF9F;/*消息气泡颜色：#00FF7F*/
+}
+
+.amsg{/*设置消息气泡容器样式*/
+    position: relative;
+    /*border: 1px solid black;*/
+    width: 100%;
+    height:auto;
+    margin-top: 5px;
+}
+.userNameIsTop{/*设置消息气泡名字的样式*/
+    position:relative;
+    font-size: 12px;
+    font-family: "幼圆";
+    height: 12px;
+    width: 500px;
+    /*left:15px;
+    top:-34px;*/
+}
+.avatarIsLeft{/*设置消息气泡头像的样式*/
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    position: relative;
+    border:0;
+   /*top:0;
+    left:5px;*/
+}
+.msgpop{/*设置消息气泡内容div的样式*/
+    border-radius: 3px;
+    box-shadow: 1px 1px 2px 1px gray;
+    position: relative;
+    /*left:60px;
+    top:-30px;*/
+    font-size: 17px;
+    line-height: 20px;
+}
+.expressionStyle{/*设置表情按钮样式*/
+    position: absolute;
+    width:28px;
+    height: 28px;
+    border-radius: 50%;
+    right:10px;
+    top:10px;
+    border:0;
+    background-image: url(../images/expressBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    outline: none;
+}
+.expressionStyle:hover{
+    transform: scale(1.1);
+}
+.pressAfterStyle{/*设置表情按钮样式*/
+    position: absolute;
+    width:28px;
+    height: 28px;
+    border-radius: 50%;
+    right:10px;
+    top:10px;
+    border:0;
+    background-image: url(../images/expressBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-color: gray;
+    cursor: pointer;
+    outline: none;
+}
+.pressAfterStyle:hover{
+    transform: scale(1.0);
+}
+#expressionPackage{/*表情容器界面样式*/
+    width: 300px;
+    height: 300px;
+    overflow: auto;
+    box-shadow: 4px 4px 10px 2px gray;
+    background-color: white;
+    position: absolute;
+    left:79%;
+    top:360px;
+    border-radius: 2px;
+    display: none;
+}
+/*-------------------------设置滚动条的样式-------------------------*/
+#expressionPackage::-webkit-scrollbar {/*滚动条整体样式*/
+    width: 5px;     /*高宽分别对应横竖滚动条的尺寸*/
+    height: 300px;
+}
+#expressionPackage::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.2);
+}
+#expressionPackage::-webkit-scrollbar-track {/*滚动条里面轨道*/
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.1);
+}
+/*-----------------------------------------------------------------*/
+.a_imgStyle{/*设置表情的样式*/
+    position:relative;
+    width:28px;
+    height: 28px;
+    border-radius: 50%;
+    margin:4px;
+    border:0;
+    cursor: pointer;
+    outline: none;
+}
+.a_imgStyle:hover{
+    transform: scale(1.1);
+}
+.expressionImg{
+    position:relative;
+    width:17px;
+    height: 17px;
+    border-radius: 50%;
+    margin:0;
+    top:3px;
+    border:0;
+    outline: none;
+}
+.imagPanelButtonStyle{
+    position: absolute;
+    width:28px;
+    height: 28px;
+    right:10px;
+    top:48px;
+    border:0;
+    background-image: url(../images/uploadFileButtonBGI.jpg);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    outline: none;
+}
+.imagPanelButtonStyle:hover{
+    transform: scale(1.2);
+}
