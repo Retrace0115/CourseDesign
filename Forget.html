@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <!--生成验证码-->
+        <script>
+            var num="";
+            window.onload=function unit(){
+                for(var i=0;i<6;i++){
+                    num+=Math.floor(Math.random()*10).toString();
+                }
+                var vn=document.getElementById("vn");
+                vn.setAttribute("placeholder","请填写验证码："+num);
+            };
+            function validateForget(){
+                var fr=document.forgetForm;
+                var id=fr.id.value;
+                var number=fr.number.value;
+                var validateNumber=fr.validateNumber.value;
+                if(id===""){
+                    alert("请填写ID号码！");
+                    return false;
+                }
+                if(foundSpace(id)===0||id.length!==10){
+                    alert("请填写正确的ID号码！");
+                    return false;
+                }
+                if(number===""){
+                    alert("请填写手机号码！");
+                    return false;
+                }
+                if(foundSpace(number)===0||number.length!==11||number[0]!=="1"||(number[1]!=="3"&&number[1]!=="5"&&number[1]!=="7"&&number[1]!=="8")){
+                    alert("请填写正确的手机号码！");
+                    return false;
+                }
+                if(validateNumber===""){
+                    alert("请填写验证码！");
+                    return false;
+                }
+                if(validateNumber!==num){
+                    alert("验证码错误！");
+                    return false;
+                }
+                return true;
+            }
+            /*
+            * 检测字符串是否含有空格
+            * 有空格返回0
+            * 无空格返回1
+            */
+            function foundSpace(str){
+                var flag=1;
+                for(var i=0;i<str.length;i++){
+                    if(str[i]===" "){
+                        flag=0;
+                        return flag;
+                    }
+                }
+            }
+        </script>
+        <div class="ForgetPanel">
+            <div class="ForgetTop"></div>
+            <div class="ForgetBottom"><br/><br/>
+                <form action="../jsp文件/FoundPassword.jsp" name="forgetForm" method="post" onSubmit="return validateForget();"><!--找回密码表单-->
+                    <span>
+                        I&nbsp;D&nbsp;号码：<input type="text" name="id" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        手机号码：<input type="text" name="number" class="user" size="20"/>
+                    </span><br/><br/>
+                    <span>
+                        验&nbsp;证&nbsp;码：<input type="text" id="vn" name="validateNumber" class="user" size="20" />
+                    </span><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="提交" class="forgetButton"/>
+                    </span>
+                </form>
+                <a href="Register.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">注册账号</a>
+                <a href="Login.html" style="position: absolute;left: 7px;bottom:10px;text-decoration: none;color: gray">返回登录</a>
+            </div>
+        </div>
+    </body>
+</html>
