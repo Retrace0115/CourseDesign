@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>微讯</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="../css文件/BeforeChat.css" type="text/css">
+        <script type="text/javascript" src="../JavaScript文件/BeforeChat.js"></script>
+    </head>
+    <body>
+        <div class="RegisterPanel"><!--注册面板-->
+            <div class="left">
+                
+            </div>
+            <div class="right"><br/><br/><br/><br/><br/><br/><br/>
+                <form action="../jsp文件/ValidateRegister.jsp" name="registerForm" method="post" onSubmit="return validateRegister();"><!--注册表单-->
+                    <span>
+                        您的昵称：<input type="text" name="registerName" class="newUser" placeholder="1-12个字符，不含空格！" />
+                    </span><br/><br/>
+                    <span>
+                        您的密码：<input type="password" name="registerPswd" class="newUser" placeholder="6-16个字符，不含空格！"/>
+                    </span><br/><br/>
+                    <span>
+                        手机号码：<input type="text" name="registerNumber" class="newUser" placeholder="可凭该号码找回密码"/>
+                    </span><br/><br/><br/><br/>
+                    <span>
+                        <input type="submit" value="注册" class="registerButton"/>
+                    </span>
+                </form>
+                <a href="Login.html" style="position: absolute;right: 7px;bottom:10px;text-decoration: none;color: gray">已有账号？</a>
+            </div>
+        </div>
+    </body>
+</html>
